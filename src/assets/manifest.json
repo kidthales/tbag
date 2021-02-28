@@ -1,0 +1,24 @@
+{
+  "renderable": {
+    "path": "assets/renderable",
+    "files": [
+      {
+        "type": "json",
+        "key": "glyphs"
+      }
+    ]
+  },
+  "entity": {
+    "path": "assets/entity",
+    "files": [
+      {
+        "type": "json",
+        "key": "terrain"
+      },
+      {
+        "type": "json",
+        "key": "creature"
+      }
+    ]
+  }
+}

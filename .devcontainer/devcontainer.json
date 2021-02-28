@@ -1,0 +1,52 @@
+{
+  "name": "Alpine Docker-from-Docker NodeJS",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": {
+      "ALPINE_VERSION": "edge"
+    }
+  },
+  "runArgs": [],
+  "mounts": [
+    // Docker-from-docker localhost support.
+    "source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind"
+    // SSH localhost support.
+    //"source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/mnt/ssh-localhost,type=bind,consistency=cached,readonly"
+  ],
+  "overrideCommand": false,
+  // Use this environment variable if you need to bind mount your local source code into a new container.
+  "remoteEnv": {
+    "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}",
+    "CONTAINER_WORKSPACE_FOLDER": "${containerWorkspaceFolder}"
+  },
+  // Set *default* container specific settings.json values on container create.
+  "settings": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "terminal.integrated.shell.linux": "/bin/bash"
+  },
+  // Add the IDs of extensions you want installed when the container is created.
+  "extensions": [
+    "alefragnani.bookmarks",
+    "coenraads.bracket-pair-colorizer-2",
+    "davidanson.vscode-markdownlint",
+    "eamodio.gitlens",
+    "editorconfig.editorconfig",
+    "esbenp.prettier-vscode",
+    "gruntfuggly.todo-tree",
+    "mads-hartmann.bash-ide-vscode",
+    "ms-azuretools.vscode-docker",
+    "mutantdino.resourcemonitor",
+    "oderwat.indent-rainbow",
+    "pkief.material-icon-theme",
+    "redhat.vscode-xml",
+    "redhat.vscode-yaml",
+    "wayou.vscode-todo-highlight",
+    "yzhang.markdown-all-in-one"
+  ],
+  // Use 'forwardPorts' to make a list of ports inside the container available locally.
+  "forwardPorts": [],
+  // Use 'postCreateCommand' to run commands after the container is created.
+  "postCreateCommand": "",
+  // Comment out connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
+  "remoteUser": "non-root"
+}

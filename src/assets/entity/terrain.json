@@ -1,0 +1,4 @@
+[
+  { "name": "Floor", "renderable": 1, "blockMove": false },
+  { "name": "Wall", "renderable": 0, "blockMove": true }
+]
