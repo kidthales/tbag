@@ -79,6 +79,14 @@ export class Level {
     return this.levelData.seed;
   }
 
+  public get width(): number {
+    return this.levelData.mapData.width;
+  }
+
+  public get height(): number {
+    return this.levelData.mapData.height;
+  }
+
   public get entityManager(): EntityManager {
     return this.levelData.entityManager;
   }

@@ -79,18 +79,6 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
           position: { x: i + 40, y: i }
         });
       }
-      /*levelData.entityManager.create<CreatureEntity, CreatureData>(EntityType.Creature, 0, {
-        position: { x: 10, y: 10 }
-      });
-
-      levelData.entityManager.create<CreatureEntity, CreatureData>(EntityType.Creature, 0, {
-        position: { x: 10, y: 11 }
-      });
-
-      levelData.entityManager.create<CreatureEntity, CreatureData>(EntityType.Creature, 0, {
-        position: { x: 11, y: 10 }
-      });*/
-
       // TODO: Generate initial terrain data, monster data, item data, etc. from map data...
       // TODO: Update level entity manager...
     }
@@ -116,6 +104,10 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
     this.events.on(Phaser.Scenes.Events.DESTROY, this.onDestroy, this);
 
     this.level.create();
+
+    const { width, height } = this.level;
+    const { x, y } = this.level.cellToWorldXY(Math.floor(width / 2), Math.floor(height / 2));
+    this.cameras.main.centerOn(x, y);
 
     // TODO: Add avatar to map...
     this.world.scheduler.add('avatar', true, 0);
