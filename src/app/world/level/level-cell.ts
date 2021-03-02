@@ -31,7 +31,7 @@ export class LevelCell {
   }
 
   public get terrainStaticData(): TerrainStaticData {
-    return this.level.world.terrain[this.data[mapCellTerrainStaticDataIdIndex]];
+    return this.level.world.staticData.terrain[this.data[mapCellTerrainStaticDataIdIndex]];
   }
 
   public set terrainStaticDataId(id: number) {

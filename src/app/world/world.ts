@@ -1,25 +1,127 @@
-import { Font, GlyphTileset, GlyphVector } from '../plugins/glyph';
+import { Font, FontLike, GlyphTileset, GlyphVector } from '../plugins/glyph';
 import { LocalStorageScene } from '../plugins/local-storage';
 
-import { CreatureStaticData, TerrainStaticData } from './entity';
+import { CreatureStaticData, EphemeralStaticData, ItemStaticData, TerrainStaticData } from './entity';
 import { LevelDataConfig, LevelData, LevelScene } from './level';
 import { Scheduler, SchedulerState } from './scheduler';
 
+/**
+ * World static data.
+ */
+export interface WorldStaticData {
+  /**
+   * Terrain entity static data.
+   */
+  readonly terrain: TerrainStaticData[];
+
+  /**
+   * Creature entity static data.
+   */
+  readonly creature: CreatureStaticData[];
+
+  /**
+   * Item entity static data.
+   */
+  readonly item: ItemStaticData[];
+
+  /**
+   * Ephemeral entity static data.
+   */
+  readonly ephemeral: EphemeralStaticData[];
+}
+
+/**
+ * World data configuration.
+ */
 export interface WorldDataConfig {
-  glyphs: GlyphVector[];
+  /**
+   * Glyphs to be parsed into glyphsets.
+   */
+  glyphs: {
+    /**
+     * Must have a default set.
+     */
+    default: GlyphVector[];
+
+    /**
+     * Additional glyph groups.
+     */
+    [name: string]: GlyphVector[];
+  };
+
+  /**
+   * Static data for the world.
+   */
+  staticData: WorldStaticData;
+
+  /**
+   * Persisted font state.
+   */
+  font?: FontLike;
+
+  /**
+   * Persisted level states.
+   */
   levels?: Record<string, LevelDataConfig>;
+
+  /**
+   * Persisted world scheduler state.
+   */
   schedulerState?: SchedulerState;
 }
 
+/**
+ * World data.
+ */
 export class WorldData {
-  public readonly glyphs: GlyphVector[];
+  /**
+   * Default font for glyphs.
+   */
+  protected static readonly defaultFont = new Font(32, 'monospace');
 
+  /**
+   * Font for glyphs.
+   */
+  public readonly font: Font;
+
+  /**
+   * Glyphset mappings.
+   */
+  public readonly glyphsets: Map<string, GlyphTileset>;
+
+  /**
+   * World static data.
+   */
+  public readonly staticData: WorldStaticData;
+
+  /**
+   * Level data mappings.
+   */
   public readonly levels: Map<string, LevelData>;
 
+  /**
+   * World scheduler instance.
+   */
   public readonly scheduler: Scheduler;
 
-  public constructor({ glyphs, levels, schedulerState }: WorldDataConfig) {
-    this.glyphs = glyphs;
+  /**
+   * Instantiate world data. Parses & normalizes provided configuration for use with a world instance.
+   *
+   * @param worldDataConfig World data configuration.
+   */
+  public constructor({ font, glyphs, staticData, levels, schedulerState }: WorldDataConfig) {
+    this.font = Font.normalize(font || WorldData.defaultFont);
+
+    let gid = 0;
+    this.glyphsets = new Map<string, GlyphTileset>(
+      Object.entries(glyphs).map(([id, vector]) => {
+        const glyphset = new GlyphTileset(id, gid, this.font, vector);
+        gid = glyphset.total;
+        return [id, glyphset];
+      })
+    );
+
+    this.staticData = staticData;
 
     this.levels = new Map<string, LevelData>(
       Object.entries(levels || {}).map(([id, config]) => [id, new LevelData(config)])
@@ -29,33 +131,64 @@ export class WorldData {
   }
 }
 
+/**
+ * World.
+ */
 export class World {
-  public readonly font: Font;
+  /**
+   * Glyphset mappings.
+   */
+  public readonly glyphsets: Map<string, GlyphTileset>;
 
-  public readonly glyphset: GlyphTileset;
+  /**
+   * World static data.
+   */
+  public readonly staticData: WorldStaticData;
 
+  /**
+   * Level data mappings.
+   */
+  public readonly levels: Map<string, LevelData>;
+
+  /**
+   * World scheduler instance.
+   */
   public readonly scheduler: Scheduler;
 
-  protected readonly levels: Map<string, LevelData>;
+  /**
+   * Font for glyphs.
+   */
+  protected readonly worldFont: Font;
 
-  public constructor(protected readonly scene: LocalStorageScene, worldData: WorldData) {
-    this.font = new Font(32, 'monospace');
-    this.glyphset = new GlyphTileset('worldGlyphs', 0, this.font, worldData.glyphs);
-
-    this.levels = worldData.levels;
-    this.scheduler = worldData.scheduler;
+  /**
+   * Instantiate world.
+   *
+   * @param scene Host scene.
+   * @param worldData World data.
+   */
+  public constructor(
+    protected readonly scene: LocalStorageScene,
+    { font, glyphsets, staticData, levels, scheduler }: WorldData
+  ) {
+    this.worldFont = font;
+    this.glyphsets = glyphsets;
+    this.staticData = staticData;
+    this.levels = levels;
+    this.scheduler = scheduler;
 
     //this.scheduler.onTick(this.onTick, this);
   }
 
-  public get creature(): CreatureStaticData[] {
-    return this.scene.cache.json.get('creature');
+  /**
+   * Get clone of font instance in use.
+   */
+  public get font(): Font {
+    return Font.clone(this.worldFont);
   }
 
-  public get terrain(): TerrainStaticData[] {
-    return this.scene.cache.json.get('terrain');
-  }
-
+  /**
+   * TODO: Replace this nonsense...
+   */
   public run(): void {
     this.levels.set('town', new LevelData({ seed: Date.now().toString() }));
 
@@ -63,12 +196,6 @@ export class World {
 
     this.scene.scene.add(levelScene.id, levelScene, false, {});
     this.scene.scene.launch(levelScene.id, { firstTime: true });
-  }
-
-  public getLevelData(id: string): LevelData {
-    if (this.levels.has(id)) {
-      return this.levels.get(id);
-    }
   }
 
   //protected onTick(time: number): void {}

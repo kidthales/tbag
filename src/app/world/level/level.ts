@@ -1,17 +1,16 @@
-import { Glyph, GlyphSprite, GlyphTile, GlyphTilemap, GlyphTilemapComponents } from '../../plugins/glyph';
+import { Glyph, GlyphTile, GlyphTilemap, GlyphTilemapComponents } from '../../plugins/glyph';
 
 import {
-  CreatureEntity,
+  CreatureStaticData,
   EntityManager,
   EntityManagerState,
   EntityType,
   EntityUnion,
-  EphemeralEntity,
-  ItemEntity,
-  TerrainEntity,
+  EphemeralStaticData,
+  ItemStaticData,
   TerrainStaticData
 } from '../entity';
-import { MapCell, mapCellEntityIdsIndex, mapCellTerrainStaticDataIdIndex, MapData } from '../map';
+import { MapData } from '../map';
 import { SchedulerState } from '../scheduler';
 import { World } from '../world';
 
@@ -53,14 +52,14 @@ export class LevelData {
 }
 
 export class Level {
-  protected glyphmap: GlyphTilemap;
+  protected readonly glyphmap: GlyphTilemap;
 
   public constructor(protected readonly levelData: LevelData) {
-    const { font, glyphset } = this.world;
+    const { font, glyphsets } = this.world;
     const { width, height } = this.levelData.mapData;
 
     this.glyphmap = this.levelScene.add.glyphmap(undefined, width, height, font);
-    this.glyphmap.createBlankLayer('layer', glyphset);
+    this.glyphmap.createBlankLayer('default', Array.from(glyphsets.values()));
 
     this.entityManager.forEach((entity) => {
       const p = entity.data?.position;
@@ -73,6 +72,14 @@ export class Level {
 
       this.getCell(x, y).addEntity(entity);
     });
+
+    for (let y = 0; y < height; ++y) {
+      for (let x = 0; x < width; ++x) {
+        const cell = this.getCell(x, y);
+        cell.entities.forEach((entity) => this.allocateGameObject(entity));
+        cell.refresh();
+      }
+    }
   }
 
   public get seed(): string | string[] {
@@ -117,62 +124,6 @@ export class Level {
 
   public get world(): World {
     return this.levelScene.world;
-  }
-
-  public create(): void {
-    const { glyphset } = this.world;
-    const { width, height } = this.levelData.mapData;
-    const scene = this.levelScene;
-
-    for (let y = 0; y < height; ++y) {
-      for (let x = 0; x < width; ++x) {
-        const cell = this.getCell(x, y);
-        const { tile } = cell;
-
-        // Create gameobjects for entities...
-        const offsetX = tile.width / 2;
-        const offsetY = tile.height / 2;
-
-        cell.entities.forEach((entity) => {
-          let renderable = entity.data?.renderable;
-
-          if (renderable === undefined) {
-            switch (entity.type) {
-              case EntityType.Terrain:
-                renderable = this.world.terrain[entity.staticDataId].renderable;
-                break;
-              case EntityType.Creature:
-                renderable = this.world.creature[entity.staticDataId].renderable;
-                break;
-              case EntityType.Item:
-              case EntityType.Ephemeral:
-              default:
-                return;
-            }
-          }
-
-          if (renderable === undefined) {
-            return;
-          }
-
-          let glyphs: Glyph[];
-
-          if (Array.isArray(renderable) && renderable.length) {
-            glyphs = renderable.map((r) => glyphset.getGlyph(r));
-          } else if (typeof renderable === 'number') {
-            glyphs = [glyphset.getGlyph(renderable)];
-          }
-
-          if (!glyphs) {
-            return;
-          }
-
-          entity.gameobject = scene.add.glyphSprite(cell.worldX + offsetX, cell.worldY + offsetY, glyphs);
-        });
-
-        cell.refresh();
-      }
-    }
   }
 
   public getCell(x: number, y: number): LevelCell {
@@ -315,5 +266,90 @@ export class Level {
   protected getCellFromTile(tile: GlyphTile): LevelCell {
     const { x, y } = tile;
     return new LevelCell(this, x, y, this.levelData.mapData.cells[y][x], tile);
+  }
+
+  protected allocateGameObject(entity: string | EntityUnion): Phaser.GameObjects.GameObject {
+    const normalizedEntity = typeof entity === 'string' ? this.entityManager.get(entity) : entity;
+
+    if (normalizedEntity.gameobject) {
+      return normalizedEntity.gameobject;
+    }
+
+    if (!normalizedEntity.data?.position) {
+      return;
+    }
+
+    const { x: cellX, y: cellY } = normalizedEntity.data.position;
+    const cell = this.getCell(cellX, cellY);
+    const tile = cell.tile;
+
+    const offsetX = tile.width / 2;
+    const offsetY = tile.height / 2;
+
+    const renderable = this.getRenderable(entity);
+    // TODO: Handle non-glyph renderables for some entities...
+    const glyphs = this.getGlyphsFromRenderable(renderable);
+
+    if (!glyphs.length) {
+      return;
+    }
+
+    normalizedEntity.gameobject = this.levelScene.add.glyphSprite(cell.worldX + offsetX, cell.worldY + offsetY, glyphs);
+    return normalizedEntity.gameobject;
+  }
+
+  protected getRenderable(entity: string | EntityUnion): number | number[] {
+    const normalizedEntity = typeof entity === 'string' ? this.entityManager.get(entity) : entity;
+
+    let renderable = normalizedEntity.data?.renderable;
+
+    if (renderable === undefined) {
+      const { staticData } = this.world;
+
+      let lookup: TerrainStaticData[] | CreatureStaticData[] | ItemStaticData[] | EphemeralStaticData[];
+
+      switch (normalizedEntity.type) {
+        case EntityType.Terrain:
+          lookup = staticData.terrain;
+          break;
+        case EntityType.Creature:
+          lookup = staticData.creature;
+          break;
+        case EntityType.Item:
+          lookup = staticData.item;
+          break;
+        case EntityType.Ephemeral:
+          lookup = staticData.ephemeral;
+          break;
+        default:
+          return;
+      }
+
+      renderable = lookup[normalizedEntity.staticDataId].renderable;
+    }
+
+    return renderable;
+  }
+
+  protected getGlyphsFromRenderable(renderable: number | number[]): Glyph[] {
+    const glyphs: Glyph[] = [];
+
+    if (renderable === undefined) {
+      return glyphs;
+    }
+
+    const normalizedRenderable = Array.isArray(renderable) ? renderable : [renderable];
+    const glyphsets = this.world.glyphsets.values();
+
+    normalizedRenderable.forEach((r) => {
+      for (let glyphset of glyphsets) {
+        if (glyphset.containsGlyphIndex(r)) {
+          glyphs.push(glyphset.getGlyph(r));
+          break;
+        }
+      }
+    });
+
+    return glyphs;
   }
 }

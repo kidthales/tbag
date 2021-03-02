@@ -6,7 +6,8 @@ import {
   GlyphSceneGameObjectFactory,
   GlyphSceneLoaderPlugin
 } from '../../plugins/glyph';
-import { Effect, EffectType, ScheduledEffects, scheduleEffects } from '../effect';
+
+import { Effect, ScheduledEffects, scheduleEffects } from '../effect';
 import { CreatureData, CreatureEntity, EntityType } from '../entity';
 
 import { generateMapData, MapType } from '../map';
@@ -43,7 +44,7 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
   public init(config: LevelSceneInitConfig): void {
     const world = this.world;
 
-    const levelData = world.getLevelData(this.id);
+    const levelData = world.levels.get(this.id);
 
     levelData.levelScene = this;
     levelData.mapData = generateMapData(MapType.Town, levelData.seed);
@@ -102,8 +103,6 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
 
   public create(config: LevelSceneInitConfig): void {
     this.events.on(Phaser.Scenes.Events.DESTROY, this.onDestroy, this);
-
-    this.level.create();
 
     const { width, height } = this.level;
     const { x, y } = this.level.cellToWorldXY(Math.floor(width / 2), Math.floor(height / 2));

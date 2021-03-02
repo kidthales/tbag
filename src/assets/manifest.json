@@ -18,6 +18,14 @@
       {
         "type": "json",
         "key": "creature"
+      },
+      {
+        "type": "json",
+        "key": "item"
+      },
+      {
+        "type": "json",
+        "key": "ephemeral"
       }
     ]
   }

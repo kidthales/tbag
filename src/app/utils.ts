@@ -14,9 +14,3 @@ export function enumKeys<T>(e: T): string[] {
 export function enumValues<T>(e: T): T[keyof T][] {
   return enumKeys(e).map((k) => e[k]);
 }
-
-export function randomEnum<T>(e: T): T[keyof T] {
-  const values = enumValues(e);
-  const ix = Math.floor(Math.random() * values.length);
-  return values[ix];
-}
