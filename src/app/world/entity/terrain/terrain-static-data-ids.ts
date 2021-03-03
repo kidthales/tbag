@@ -1,2 +1,2 @@
-export const wall = 0;
-export const floor = 1;
+export const floor = 0;
+export const wall = 1;

@@ -1,27 +1,17 @@
-import ArenaGenerator from 'rot-js/lib/map/arena';
-import CellularGenerator from 'rot-js/lib/map/cellular';
-import DiggerGenerator from 'rot-js/lib/map/digger';
-import DividedMazeGenerator from 'rot-js/lib/map/dividedmaze';
-import DungeonGenerator from 'rot-js/lib/map/dungeon';
-import MapGenerator from 'rot-js/lib/map/map';
-import RNG from 'rot-js/lib/rng';
+import { LevelData, LevelType } from '../level';
 
-import { MapCell, MapData, MapDataCorridorFeature, MapDataFeatures, MapDataRoomFeature, MapType } from './map';
+import { generateTown } from './town';
 
-export function generateMapData(type: MapType, seed: string | string[]): MapData {
+export function generateMapData(levelData: LevelData): void {
+  const { type, seed } = levelData;
   const normalizedSeed = normalizeSeed(seed);
 
-  RNG.setSeed(normalizedSeed);
-
-  const [width, height] = getDimensionsByMapType(type);
-  const generator = getMapGenerator(type, width, height);
-  const cells = allocateMapCells(width, height);
-
-  runMapGenerator(type, generator, cells);
-
-  const features = createMapFeatures(type, generator, cells);
-
-  return new MapData(type, width, height, cells, features);
+  switch (type) {
+    case LevelType.Town:
+    default:
+      levelData.mapData = generateTown(normalizedSeed);
+      break;
+  }
 }
 
 function normalizeSeed(seed: string | string[]): number {
@@ -34,7 +24,7 @@ function normalizeSeed(seed: string | string[]): number {
   }, 0);
 }
 
-function getDimensionsByMapType(type: MapType): [number, number] {
+/*function getDimensionsByMapType(type: MapType): [number, number] {
   let width: number;
   let height: number;
 
@@ -51,7 +41,7 @@ function getDimensionsByMapType(type: MapType): [number, number] {
       width = RNG.getUniformInt(80, 160);
       height = RNG.getUniformInt(80, 160);
       break;
-    case MapType.Town:
+    case MapType.Arena:
     default:
       width = 80;
       height = 25;
@@ -84,7 +74,7 @@ function getMapGenerator(type: MapType, width: number, height: number) {
     case MapType.Cave:
       generator = new CellularGenerator(width, height, { connected: true } as any);
       break;
-    case MapType.Town:
+    case MapType.Arena:
     default:
       generator = new ArenaGenerator(width, height);
       break;
@@ -129,4 +119,4 @@ function createMapFeatures(type: MapType, generator: MapGenerator, cells: MapCel
 
 function assignMapCell(x: number, y: number, contents: number, cells: MapCell[][]): void {
   cells[y][x] = [contents, undefined];
-}
+}*/

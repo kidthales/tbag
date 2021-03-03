@@ -2,7 +2,7 @@ import { Font, FontLike, GlyphTileset, GlyphVector } from '../plugins/glyph';
 import { LocalStorageScene } from '../plugins/local-storage';
 
 import { CreatureStaticData, EphemeralStaticData, ItemStaticData, TerrainStaticData } from './entity';
-import { LevelDataConfig, LevelData, LevelScene } from './level';
+import { LevelDataConfig, LevelData, LevelScene, LevelType } from './level';
 import { Scheduler, SchedulerState } from './scheduler';
 
 /**
@@ -190,7 +190,7 @@ export class World {
    * TODO: Replace this nonsense...
    */
   public run(): void {
-    this.levels.set('town', new LevelData({ seed: Date.now().toString() }));
+    this.levels.set('town', new LevelData({ type: LevelType.Town, seed: Date.now().toString() }));
 
     const levelScene = new LevelScene('town', this);
 

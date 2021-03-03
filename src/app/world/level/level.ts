@@ -1,28 +1,38 @@
 import { Glyph, GlyphTile, GlyphTilemap, GlyphTilemapComponents } from '../../plugins/glyph';
 
 import { EntityComponents, EntityManager, EntityManagerState, EntityUnion, getEntityComponentData } from '../entity';
-import { MapData } from '../map';
+import { MapDataUnion } from '../map/type';
 import { SchedulerState } from '../scheduler';
 import { World } from '../world';
 
 import { LevelCell } from './level-cell';
 import { LevelScene } from './level-scene';
 
+export enum LevelType {
+  Town
+}
+
 export interface LevelDataConfig {
+  type: LevelType;
   seed: string | string[];
+  persist?: boolean;
   rngState?: string;
   entityManagerState?: EntityManagerState;
   schedulerState?: SchedulerState;
-  mapData?: MapData;
+  mapData?: MapDataUnion;
   levelScene?: LevelScene;
 }
 
 export class LevelData {
+  public readonly type: LevelType;
+
   public readonly seed: string | string[];
+
+  public readonly persist: boolean;
 
   public readonly entityManager: EntityManager;
 
-  public mapData: MapData;
+  public mapData: MapDataUnion;
 
   public rngState: string;
 
@@ -30,8 +40,20 @@ export class LevelData {
 
   public levelScene: LevelScene;
 
-  public constructor({ seed, rngState, entityManagerState, schedulerState, mapData, levelScene }: LevelDataConfig) {
+  public constructor({
+    type,
+    seed,
+    persist,
+    rngState,
+    entityManagerState,
+    schedulerState,
+    mapData,
+    levelScene
+  }: LevelDataConfig) {
+    this.type = type;
     this.seed = seed;
+    this.persist = persist;
+
     this.entityManager = new EntityManager(entityManagerState);
 
     this.rngState = rngState || null;
@@ -71,6 +93,10 @@ export class Level {
         cell.refresh();
       }
     }
+  }
+
+  public get type(): LevelType {
+    return this.levelData.type;
   }
 
   public get seed(): string | string[] {
@@ -256,7 +282,7 @@ export class Level {
 
   protected getCellFromTile(tile: GlyphTile): LevelCell {
     const { x, y } = tile;
-    return new LevelCell(this, x, y, this.levelData.mapData.cells[y][x], tile);
+    return new LevelCell(this, x, y, this.levelData.mapData.getCell(x, y), tile);
   }
 
   protected allocateGameObject(entity: string | EntityUnion): Phaser.GameObjects.GameObject {

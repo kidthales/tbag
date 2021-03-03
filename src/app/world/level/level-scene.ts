@@ -10,7 +10,7 @@ import {
 import { Effect, ScheduledEffects, scheduleEffects } from '../effect';
 import { CreatureData, CreatureEntity, EntityType } from '../entity';
 
-import { generateMapData, MapType } from '../map';
+import { generateMapData } from '../map';
 import { run, sync } from '../simulation';
 import { World } from '../world';
 
@@ -43,11 +43,11 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
 
   public init(config: LevelSceneInitConfig): void {
     const world = this.world;
-
     const levelData = world.levels.get(this.id);
 
     levelData.levelScene = this;
-    levelData.mapData = generateMapData(MapType.Town, levelData.seed);
+
+    generateMapData(levelData);
 
     if (config.firstTime) {
       for (let i = 1; i <= 20; ++i) {
