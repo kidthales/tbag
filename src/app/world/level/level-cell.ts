@@ -7,8 +7,10 @@ import {
   EntityType,
   CreatureEntity,
   ItemEntity,
-  EphemeralEntity
+  EphemeralEntity,
+  getEntityComponentData
 } from '../entity';
+import { EntityComponents } from '../entity';
 import { MapCell, mapCellTerrainStaticDataIdIndex, mapCellEntityIdsIndex } from '../map';
 
 import { Level } from './level';
@@ -65,8 +67,17 @@ export class LevelCell {
   }
 
   public get blockMove(): boolean {
-    const terrain = this.terrain?.data || this.terrainStaticData;
-    return terrain.blockMove;
+    const terrain = this.terrain;
+
+    if (terrain) {
+      return getEntityComponentData<EntityComponents.LevelCellComponentData>(
+        EntityComponents.levelCellComponentKey,
+        terrain,
+        this.level.world.staticData
+      ).blockMove;
+    }
+
+    return this.terrainStaticData[EntityComponents.levelCellComponentKey].blockMove;
   }
 
   public addEntity(entity: string | EntityUnion): boolean {

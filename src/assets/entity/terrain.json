@@ -1,4 +1,22 @@
 [
-  { "name": "Floor", "renderable": 1, "blockMove": false },
-  { "name": "Wall", "renderable": 0, "blockMove": true }
+  {
+    "description": {
+      "name": "Floor"
+    },
+    "renderable": 1,
+    "levelCell": {
+      "blockMove": false,
+      "blockLight": false
+    }
+  },
+  {
+    "description": {
+      "name": "Wall"
+    },
+    "renderable": 0,
+    "levelCell": {
+      "blockMove": true,
+      "blockLight": true
+    }
+  }
 ]

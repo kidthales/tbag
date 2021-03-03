@@ -1,15 +1,6 @@
 import { Glyph, GlyphTile, GlyphTilemap, GlyphTilemapComponents } from '../../plugins/glyph';
 
-import {
-  CreatureStaticData,
-  EntityManager,
-  EntityManagerState,
-  EntityType,
-  EntityUnion,
-  EphemeralStaticData,
-  ItemStaticData,
-  TerrainStaticData
-} from '../entity';
+import { EntityComponents, EntityManager, EntityManagerState, EntityUnion, getEntityComponentData } from '../entity';
 import { MapData } from '../map';
 import { SchedulerState } from '../scheduler';
 import { World } from '../world';
@@ -275,7 +266,13 @@ export class Level {
       return normalizedEntity.gameobject;
     }
 
-    if (!normalizedEntity.data?.position) {
+    const position = getEntityComponentData<EntityComponents.PositionComponentData>(
+      EntityComponents.positionComponentKey,
+      normalizedEntity,
+      this.world.staticData
+    );
+
+    if (!position) {
       return;
     }
 
@@ -300,35 +297,7 @@ export class Level {
 
   protected getRenderable(entity: string | EntityUnion): number | number[] {
     const normalizedEntity = typeof entity === 'string' ? this.entityManager.get(entity) : entity;
-
-    let renderable = normalizedEntity.data?.renderable;
-
-    if (renderable === undefined) {
-      const { staticData } = this.world;
-
-      let lookup: TerrainStaticData[] | CreatureStaticData[] | ItemStaticData[] | EphemeralStaticData[];
-
-      switch (normalizedEntity.type) {
-        case EntityType.Terrain:
-          lookup = staticData.terrain;
-          break;
-        case EntityType.Creature:
-          lookup = staticData.creature;
-          break;
-        case EntityType.Item:
-          lookup = staticData.item;
-          break;
-        case EntityType.Ephemeral:
-          lookup = staticData.ephemeral;
-          break;
-        default:
-          return;
-      }
-
-      renderable = lookup[normalizedEntity.staticDataId].renderable;
-    }
-
-    return renderable;
+    return getEntityComponentData(EntityComponents.renderableComponentKey, normalizedEntity, this.world.staticData);
   }
 
   protected getGlyphsFromRenderable(renderable: number | number[]): Glyph[] {

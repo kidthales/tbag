@@ -1,18 +1,11 @@
-import { JSONObject, JSONValue } from '../../utils';
+import { JSONObject } from '../../utils';
 
+import { DescriptionComponent, PositionComponent, RenderableComponent } from './component';
 import { EntityType } from './type';
 
-export interface EntityStaticData extends JSONObject {
-  name: string;
-  renderable?: number | number[];
-}
+export interface EntityStaticData extends DescriptionComponent, Partial<RenderableComponent>, JSONObject {}
 
-export interface EntityData extends Partial<EntityStaticData>, JSONObject {
-  position?: {
-    x: number;
-    y: number;
-  };
-}
+export interface EntityData extends Partial<EntityStaticData>, Partial<PositionComponent>, JSONObject {}
 
 export interface Entity<
   T extends EntityData = EntityData,

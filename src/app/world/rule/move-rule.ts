@@ -1,8 +1,9 @@
 import { MoveActionDirection, MoveActionPayload } from '../action';
-import { createMoveEffect, Effect, MoveEffectData } from '../effect';
-import { CreatureData, CreatureEntity, EntityType, EphemeralData } from '../entity';
+import { createMoveEffect, Effect } from '../effect';
+import { CreatureData, CreatureEntity, EntityType, EphemeralData, getEntityComponentData } from '../entity';
+import { EntityComponents } from '../entity';
 import { Level, LevelCell } from '../level';
-import { Direction } from '../map';
+import { translate } from '../map';
 import { Scheduler } from '../scheduler';
 
 import { Apply, Validate } from './rule';
@@ -36,20 +37,15 @@ export const apply: Apply<MoveActionPayload> = function apply(
   rng: Phaser.Math.RandomDataGenerator,
   skipEffects = false
 ): Effect[] {
-  let effectData: MoveEffectData;
-
   switch (actor.type) {
     case EntityType.Creature:
-      effectData = applyCreatureMove(actor, direction, level, scheduler, rng);
-      break;
+      return applyCreatureMove(actor, direction, level, scheduler, rng, skipEffects);
     case EntityType.Ephemeral:
     case EntityType.Terrain:
     case EntityType.Item:
     default:
       return [];
   }
-
-  return createMoveEffect(scheduler.time, actor, level, effectData, skipEffects);
 };
 
 function validateCreatureMove(
@@ -89,9 +85,14 @@ function applyCreatureMove(
   direction: MoveActionDirection,
   level: Level,
   scheduler: Scheduler,
-  rng: Phaser.Math.RandomDataGenerator
-): MoveEffectData {
-  const position = creature.data.position;
+  rng: Phaser.Math.RandomDataGenerator,
+  skipEffects = false
+): Effect[] {
+  const position = getEntityComponentData<EntityComponents.PositionComponentData>(
+    EntityComponents.positionComponentKey,
+    creature,
+    level.world.staticData
+  );
 
   const { x: srcX, y: srcY } = position;
 
@@ -106,38 +107,10 @@ function applyCreatureMove(
 
   scheduler.setDuration(rng.integerInRange(1, 2));
 
-  return { srcCell, dstCell };
+  return createMoveEffect(scheduler.time, creature, level, { srcCell, dstCell }, skipEffects);
 }
 
 function getCell(srcX: number, srcY: number, direction: MoveActionDirection, level: Level): LevelCell {
   const [dstX, dstY] = translate(srcX, srcY, direction);
-
-  if (!level.isInBounds(dstX, dstY)) {
-    return;
-  }
-
   return level.getCell(dstX, dstY);
-}
-
-function translate(x: number, y: number, direction: MoveActionDirection): [number, number] {
-  switch (direction) {
-    case Direction.North:
-      return [x, y - 1];
-    case Direction.NorthEast:
-      return [x + 1, y - 1];
-    case Direction.East:
-      return [x + 1, y];
-    case Direction.SouthEast:
-      return [x + 1, y + 1];
-    case Direction.South:
-      return [x, y + 1];
-    case Direction.SouthWest:
-      return [x - 1, y + 1];
-    case Direction.West:
-      return [x - 1, y];
-    case Direction.NorthWest:
-      return [x - 1, y - 1];
-    default:
-      return [x, y];
-  }
 }

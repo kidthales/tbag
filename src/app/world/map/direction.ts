@@ -51,9 +51,37 @@ export enum CardinalDirectionCombination {
   NorthEastSouthWest = IntercardinalDirection.NorthWest + IntercardinalDirection.SouthEast
 }
 
+export const directionTranslation: Record<Direction, [number, number]> = {
+  [Direction.North]: [0, -1],
+  [Direction.NorthNorthEast]: [1, -2],
+  [Direction.NorthEast]: [1, -1],
+  [Direction.EastNorthEast]: [2, -1],
+  [Direction.East]: [1, 0],
+  [Direction.EastSouthEast]: [2, 1],
+  [Direction.SouthEast]: [1, -1],
+  [Direction.SouthSouthEast]: [1, 2],
+  [Direction.South]: [0, 1],
+  [Direction.SouthSouthWest]: [-1, 2],
+  [Direction.SouthWest]: [-1, 1],
+  [Direction.WestSouthWest]: [-2, 1],
+  [Direction.West]: [-1, 0],
+  [Direction.WestNorthWest]: [-2, 1],
+  [Direction.NorthWest]: [-1, -1],
+  [Direction.NorthNorthWest]: [-1, 2]
+};
+
 export function hasCardinalDirectionComponent(
   subject: Direction | CardinalDirectionCombination,
   component: CardinalDirection
 ): boolean {
   return !!(subject & component);
+}
+
+export function translate(x: number, y: number, direction: Direction): [number, number] {
+  if (direction === undefined || directionTranslation[direction] === undefined) {
+    return [x, y];
+  }
+
+  const [dx, dy] = directionTranslation[direction];
+  return [x + dx, y + dy];
 }

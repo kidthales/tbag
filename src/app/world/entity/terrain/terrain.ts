@@ -1,11 +1,10 @@
 import { JSONObject } from '../../../utils';
 
+import { LevelCellComponent } from '../component';
 import { Entity, EntityData, EntityStaticData } from '../entity';
 import { EntityType } from '../type';
 
-export interface TerrainStaticData extends EntityStaticData, JSONObject {
-  blockMove?: boolean;
-}
+export interface TerrainStaticData extends LevelCellComponent, EntityStaticData, JSONObject {}
 
 export interface TerrainData extends Partial<TerrainStaticData>, EntityData, JSONObject {}
 
