@@ -58,7 +58,7 @@ export const directionTranslation: Record<Direction, [number, number]> = {
   [Direction.EastNorthEast]: [2, -1],
   [Direction.East]: [1, 0],
   [Direction.EastSouthEast]: [2, 1],
-  [Direction.SouthEast]: [1, -1],
+  [Direction.SouthEast]: [1, 1],
   [Direction.SouthSouthEast]: [1, 2],
   [Direction.South]: [0, 1],
   [Direction.SouthSouthWest]: [-1, 2],
