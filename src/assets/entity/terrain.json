@@ -1,6 +1,16 @@
 [
   {
     "description": {
+      "name": "Wall"
+    },
+    "renderable": 0,
+    "levelCell": {
+      "blockMove": true,
+      "blockLight": true
+    }
+  },
+  {
+    "description": {
       "name": "Floor"
     },
     "renderable": 1,
@@ -11,12 +21,32 @@
   },
   {
     "description": {
-      "name": "Wall"
+      "name": "Door"
     },
-    "renderable": 0,
+    "renderable": [2, 3],
     "levelCell": {
       "blockMove": true,
       "blockLight": true
+    }
+  },
+  {
+    "description": {
+      "name": "Entrance"
+    },
+    "renderable": [4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+    "levelCell": {
+      "blockMove": false,
+      "blockLight": false
+    }
+  },
+  {
+    "description": {
+      "name": "Stairs"
+    },
+    "renderable": [14, 15],
+    "levelCell": {
+      "blockMove": false,
+      "blockLight": false
     }
   }
 ]

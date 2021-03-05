@@ -6,7 +6,12 @@ export const mapCellEntityIdsIndex = 1;
 
 export type MapCell = [number, string[]?];
 
-export abstract class MapData<T, V> {
+export interface MapFeatures {
+  exterior?: boolean;
+  unusedAreas?: Phaser.Geom.Rectangle[];
+}
+
+export abstract class MapData<T, V extends MapFeatures = MapFeatures> {
   public abstract readonly levelType: LevelType;
 
   protected cells: T;
@@ -18,7 +23,7 @@ export abstract class MapData<T, V> {
   public abstract setCell(x: number, y: number, cell: MapCell): this;
 }
 
-export abstract class ArrayMapData<T> extends MapData<MapCell[][], T> {
+export abstract class ArrayMapData<T extends MapFeatures = MapFeatures> extends MapData<MapCell[][], T> {
   public constructor(public readonly width: number, public readonly height: number, public readonly features: T) {
     super(width, height, features);
 

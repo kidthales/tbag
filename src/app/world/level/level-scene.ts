@@ -8,13 +8,13 @@ import {
 } from '../../plugins/glyph';
 
 import { Effect, ScheduledEffects, scheduleEffects } from '../effect';
-import { CreatureData, CreatureEntity, EntityType } from '../entity';
 
 import { generateMapData } from '../map';
 import { run, sync } from '../simulation';
 import { World } from '../world';
 
 import { Level } from './level';
+import { populate } from './populate';
 
 export interface LevelSceneInitConfig {
   firstTime?: boolean;
@@ -50,38 +50,7 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
     generateMapData(levelData);
 
     if (config.firstTime) {
-      for (let i = 1; i <= 20; ++i) {
-        levelData.entityManager.create<CreatureEntity, CreatureData>(EntityType.Creature, 0, {
-          position: { x: i + 50, y: i }
-        });
-      }
-      for (let i = 1; i <= 20; ++i) {
-        levelData.entityManager.create<CreatureEntity, CreatureData>(EntityType.Creature, 0, {
-          position: { x: i + 10, y: i }
-        });
-      }
-      for (let i = 1; i <= 20; ++i) {
-        levelData.entityManager.create<CreatureEntity, CreatureData>(EntityType.Creature, 0, {
-          position: { x: i, y: i }
-        });
-      }
-      for (let i = 1; i <= 20; ++i) {
-        levelData.entityManager.create<CreatureEntity, CreatureData>(EntityType.Creature, 0, {
-          position: { x: i + 30, y: i }
-        });
-      }
-      for (let i = 1; i <= 20; ++i) {
-        levelData.entityManager.create<CreatureEntity, CreatureData>(EntityType.Creature, 0, {
-          position: { x: i + 20, y: i }
-        });
-      }
-      for (let i = 1; i <= 20; ++i) {
-        levelData.entityManager.create<CreatureEntity, CreatureData>(EntityType.Creature, 0, {
-          position: { x: i + 40, y: i }
-        });
-      }
-      // TODO: Generate initial terrain data, monster data, item data, etc. from map data...
-      // TODO: Update level entity manager...
+      populate(levelData);
     }
 
     const level = new Level(levelData);
