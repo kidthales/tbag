@@ -1,7 +1,8 @@
 import { enumValues } from '../../utils';
+
 import { ActionType, ActionUnion, MoveAction, MoveActionDirection, NoopAction } from '../action';
 import { Effect } from '../effect';
-import { Entity } from '../entity';
+import { EntityUnion } from '../entity';
 import { Level } from '../level';
 import { CardinalDirection, IntercardinalDirection } from '../map';
 import { MoveRule, NoopRule } from '../rule';
@@ -96,7 +97,7 @@ export function apply(
 }
 
 function act(
-  entity: Entity,
+  entity: EntityUnion,
   level: Level,
   scheduler: Scheduler,
   rng: Phaser.Math.RandomDataGenerator,

@@ -1,6 +1,7 @@
-import { EntityType, TerrainData, TerrainEntity, terrainStaticDataIds } from '../entity';
-import { renderableComponentKey } from '../entity/component';
+import { EntityFactory, renderableComponentKey, TerrainData, TerrainEntity } from '../entity';
 import { TownMapData } from '../map';
+import { staticDataIds } from '../static-data-ids';
+import { WorldStaticData } from '../world';
 
 import { LevelData, LevelType } from './level';
 
@@ -15,17 +16,30 @@ export function populate(levelData: LevelData): void {
 }
 
 function populateTown(mapData: TownMapData, levelData: LevelData): void {
-  const entranceRenderable =
-    levelData.levelScene.world.staticData.terrain[terrainStaticDataIds.entrance][renderableComponentKey];
+  const terrainEntityFactory = levelData.entityManager.createFactory(TerrainEntity);
 
-  let frame = 0;
+  assignBuildings(mapData, levelData, terrainEntityFactory);
+}
+
+function assignBuildings(
+  mapData: TownMapData,
+  levelData: LevelData,
+  terrainEntityFactory: EntityFactory<TerrainEntity<TerrainData>>
+): void {
+  const renderable = getEntranceTerrainRenderable(levelData.levelScene.world.staticData);
+  let index = 0;
 
   mapData.features.buildings.forEach((buildingFeature) => {
     const { x, y } = buildingFeature.entrance;
 
-    levelData.entityManager.create<TerrainEntity, TerrainData>(EntityType.Terrain, terrainStaticDataIds.entrance, {
-      renderable: entranceRenderable[frame++],
+    terrainEntityFactory(staticDataIds.terrain.entrance, {
+      renderable: renderable[index++ % renderable.length],
       position: { x, y }
     });
   });
+}
+
+function getEntranceTerrainRenderable(staticData: WorldStaticData): number[] {
+  const renderable = staticData.getTerrain(staticDataIds.terrain.entrance)[renderableComponentKey];
+  return typeof renderable === 'number' ? [renderable] : renderable;
 }

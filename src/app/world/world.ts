@@ -2,13 +2,13 @@ import { Font, FontLike, GlyphTileset, GlyphVector } from '../plugins/glyph';
 import { LocalStorageScene } from '../plugins/local-storage';
 
 import { CreatureStaticData, EphemeralStaticData, ItemStaticData, TerrainStaticData } from './entity';
-import { LevelDataConfig, LevelData, LevelScene, LevelType } from './level';
+import { LevelData, LevelDataConfig, LevelScene, LevelType } from './level';
 import { Scheduler, SchedulerState } from './scheduler';
 
 /**
  * World static data.
  */
-export interface WorldStaticData {
+export interface WorldStaticDataConfig {
   /**
    * Terrain entity static data.
    */
@@ -28,6 +28,51 @@ export interface WorldStaticData {
    * Ephemeral entity static data.
    */
   readonly ephemeral: EphemeralStaticData[];
+}
+
+export class WorldStaticData {
+  /**
+   * Terrain entity static data.
+   */
+  protected readonly terrain: TerrainStaticData[];
+
+  /**
+   * Creature entity static data.
+   */
+  protected readonly creature: CreatureStaticData[];
+
+  /**
+   * Item entity static data.
+   */
+  protected readonly item: ItemStaticData[];
+
+  /**
+   * Ephemeral entity static data.
+   */
+  protected readonly ephemeral: EphemeralStaticData[];
+
+  public constructor({ terrain, creature, item, ephemeral }: WorldStaticDataConfig) {
+    this.terrain = terrain;
+    this.creature = creature;
+    this.item = item;
+    this.ephemeral = ephemeral;
+  }
+
+  public getTerrain(id: number): TerrainStaticData {
+    return this.terrain[id];
+  }
+
+  public getCreature(id: number): CreatureStaticData {
+    return this.creature[id];
+  }
+
+  public getItem(id: number): ItemStaticData {
+    return this.item[id];
+  }
+
+  public getEphemeral(id: number): EphemeralStaticData {
+    return this.ephemeral[id];
+  }
 }
 
 /**
@@ -52,7 +97,7 @@ export interface WorldDataConfig {
   /**
    * Static data for the world.
    */
-  staticData: WorldStaticData;
+  staticData: WorldStaticDataConfig;
 
   /**
    * Persisted font state.
@@ -121,7 +166,7 @@ export class WorldData {
       })
     );
 
-    this.staticData = staticData;
+    this.staticData = new WorldStaticData(staticData);
 
     this.levels = new Map<string, LevelData>(
       Object.entries(levels || {}).map(([id, config]) => [id, new LevelData(config)])

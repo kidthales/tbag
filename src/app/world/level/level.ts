@@ -1,6 +1,13 @@
 import { Glyph, GlyphTile, GlyphTilemap, GlyphTilemapComponents } from '../../plugins/glyph';
 
-import { EntityComponents, EntityManager, EntityManagerState, EntityUnion, getEntityComponentData } from '../entity';
+import {
+  EntityManager,
+  EntityManagerState,
+  EntityUnion,
+  PositionComponentData,
+  positionComponentKey,
+  renderableComponentKey
+} from '../entity';
 import { MapDataUnion } from '../map/type';
 import { SchedulerState } from '../scheduler';
 import { World } from '../world';
@@ -292,17 +299,13 @@ export class Level {
       return normalizedEntity.gameobject;
     }
 
-    const position = getEntityComponentData<EntityComponents.PositionComponentData>(
-      EntityComponents.positionComponentKey,
-      normalizedEntity,
-      this.world.staticData
-    );
-
-    if (!position) {
+    if (!normalizedEntity.hasComponent(positionComponentKey)) {
       return;
     }
 
-    const { x: cellX, y: cellY } = normalizedEntity.data.position;
+    const position = normalizedEntity.getComponent<PositionComponentData>(positionComponentKey);
+
+    const { x: cellX, y: cellY } = position;
     const cell = this.getCell(cellX, cellY);
     const tile = cell.tile;
 
@@ -310,6 +313,7 @@ export class Level {
     const offsetY = tile.height / 2;
 
     const renderable = this.getRenderable(entity);
+
     // TODO: Handle non-glyph renderables for some entities...
     const glyphs = this.getGlyphsFromRenderable(renderable);
 
@@ -323,7 +327,7 @@ export class Level {
 
   protected getRenderable(entity: string | EntityUnion): number | number[] {
     const normalizedEntity = typeof entity === 'string' ? this.entityManager.get(entity) : entity;
-    return getEntityComponentData(EntityComponents.renderableComponentKey, normalizedEntity, this.world.staticData);
+    return normalizedEntity.getComponent(renderableComponentKey);
   }
 
   protected getGlyphsFromRenderable(renderable: number | number[]): Glyph[] {

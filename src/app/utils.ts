@@ -1,5 +1,5 @@
-export interface Type<T, P = unknown> extends Function {
-  new (...args: P[]): T;
+export interface Type<T, P extends Array<unknown> = unknown[]> extends Function {
+  new (...args: P): T;
 }
 
 export type JSONPrimitive = string | number | boolean | null;

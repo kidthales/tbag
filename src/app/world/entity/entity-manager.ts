@@ -1,14 +1,19 @@
-import { JSONValue } from '../../utils';
+import { Type } from '../../utils';
 
-import { Entity, EntityData } from './entity';
-import { EntityType, EntityUnion } from './type';
+import { EntityConstructorParameters, EntityState, EntityUnion } from './entity';
+
+export type EntityFactory<T extends EntityUnion = EntityUnion> = <D extends T['data'] = T['data']>(
+  staticDataId: number,
+  data?: D,
+  gameobject?: Phaser.GameObjects.GameObject
+) => T;
 
 export interface EntityManagerState {
-  entities: Entity[];
+  entities: EntityState[];
 }
 
 export class EntityManager {
-  protected readonly entities: Map<string, Entity>;
+  protected readonly entities: Map<string, EntityUnion>;
 
   public constructor(state?: EntityManagerState) {
     if (!state) {
@@ -33,16 +38,29 @@ export class EntityManager {
     };
   }
 
-  public create<
-    T extends Entity<U, V>,
-    U extends EntityData = EntityData,
-    V extends Phaser.GameObjects.GameObject = Phaser.GameObjects.GameObject
-  >(type: EntityType, staticDataId: number, data?: U, gameobject?: V): T {
+  public create<T extends EntityUnion = EntityUnion, U extends T['data'] = T['data']>(
+    ctor: Type<T, EntityConstructorParameters<U>>,
+    staticDataId: number,
+    data?: U,
+    gameobject?: Phaser.GameObjects.GameObject
+  ): T {
     const id = Phaser.Math.RND.uuid();
-    const entity = { id, type, staticDataId, data, gameobject };
+    const entity = new ctor(id, staticDataId, data, gameobject);
 
     this.entities.set(id, entity);
-    return entity as T;
+    return entity;
+  }
+
+  public createFactory<T extends EntityUnion = EntityUnion>(
+    ctor: Type<T, EntityConstructorParameters>
+  ): EntityFactory<T> {
+    return <D extends T['data'] = T['data']>(
+      staticDataId: number,
+      data?: D,
+      gameobject?: Phaser.GameObjects.GameObject
+    ) => {
+      return this.create<T, D>(ctor, staticDataId, data, gameobject);
+    };
   }
 
   public has(id: string): boolean {
@@ -59,7 +77,7 @@ export class EntityManager {
     return entity;
   }
 
-  public forEach(callback: (entity: Entity) => void): this {
+  public forEach(callback: (entity: EntityUnion) => void): this {
     this.entities.forEach(callback);
     return this;
   }

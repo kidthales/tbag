@@ -1,17 +1,17 @@
 import { GlyphTile } from '../../plugins/glyph';
 
 import {
-  TerrainStaticData,
-  EntityUnion,
-  TerrainEntity,
-  EntityType,
   CreatureEntity,
-  ItemEntity,
+  EntityType,
+  EntityUnion,
   EphemeralEntity,
-  getEntityComponentData
+  ItemEntity,
+  LevelCellComponentData,
+  levelCellComponentKey,
+  TerrainEntity,
+  TerrainStaticData
 } from '../entity';
-import { EntityComponents } from '../entity';
-import { MapCell, mapCellTerrainStaticDataIdIndex, mapCellEntityIdsIndex } from '../map';
+import { MapCell, mapCellEntityIdsIndex, mapCellTerrainStaticDataIdIndex } from '../map';
 
 import { Level } from './level';
 
@@ -33,7 +33,8 @@ export class LevelCell {
   }
 
   public get terrainStaticData(): TerrainStaticData {
-    return this.level.world.staticData.terrain[this.data[mapCellTerrainStaticDataIdIndex]];
+    const id = this.data[mapCellTerrainStaticDataIdIndex];
+    return this.level.world.staticData.getTerrain(id);
   }
 
   public set terrainStaticDataId(id: number) {
@@ -70,14 +71,24 @@ export class LevelCell {
     const terrain = this.terrain;
 
     if (terrain) {
-      return getEntityComponentData<EntityComponents.LevelCellComponentData>(
-        EntityComponents.levelCellComponentKey,
-        terrain,
-        this.level.world.staticData
-      ).blockMove;
+      if (terrain.hasComponent(levelCellComponentKey)) {
+        return terrain.getComponent<LevelCellComponentData>(levelCellComponentKey).blockMove;
+      }
+
+      const staticData = this.level.world.staticData;
+
+      if (terrain.hasStaticComponent(levelCellComponentKey, staticData)) {
+        return terrain.getStaticComponent<LevelCellComponentData>(levelCellComponentKey, staticData).blockMove;
+      }
     }
 
-    return this.terrainStaticData[EntityComponents.levelCellComponentKey].blockMove;
+    const data = this.terrainStaticData[levelCellComponentKey];
+
+    if (!data) {
+      return true;
+    }
+
+    return data.blockMove;
   }
 
   public addEntity(entity: string | EntityUnion): boolean {
@@ -95,7 +106,7 @@ export class LevelCell {
 
         return !!ids.push(normalizedEntity.id);
       case EntityType.Creature:
-        if (this.terrain) {
+        if (this.creature) {
           return false;
         }
 

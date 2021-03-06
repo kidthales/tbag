@@ -1,7 +1,13 @@
 import { MoveActionDirection, MoveActionPayload } from '../action';
 import { createMoveEffect, Effect } from '../effect';
-import { CreatureData, CreatureEntity, EntityType, EphemeralData, getEntityComponentData } from '../entity';
-import { EntityComponents } from '../entity';
+import {
+  CreatureData,
+  CreatureEntity,
+  EphemeralData,
+  EntityType,
+  PositionComponentData,
+  positionComponentKey
+} from '../entity';
 import { Level, LevelCell } from '../level';
 import { translate } from '../map';
 import { Scheduler } from '../scheduler';
@@ -88,11 +94,7 @@ function applyCreatureMove(
   rng: Phaser.Math.RandomDataGenerator,
   skipEffects = false
 ): Effect[] {
-  const position = getEntityComponentData<EntityComponents.PositionComponentData>(
-    EntityComponents.positionComponentKey,
-    creature,
-    level.world.staticData
-  );
+  const position = creature.getComponent<PositionComponentData>(positionComponentKey);
 
   const { x: srcX, y: srcY } = position;
 

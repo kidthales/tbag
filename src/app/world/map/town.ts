@@ -1,18 +1,18 @@
 import ArenaGenerator from 'rot-js/lib/map/arena';
 import RNG from 'rot-js/lib/rng';
 
-import { terrainStaticDataIds } from '../entity';
 import { LevelType } from '../level';
-import { Direction } from './direction';
+import { staticDataIds } from '../static-data-ids';
 
+import { Direction } from './direction';
 import { ArrayMapData, MapFeatures } from './map';
 
 const minMapDimensions = { width: 80, height: 25 };
 const maxMapDimensions = { width: 80, height: 25 };
 
 const arenaToStaticTerrainId = {
-  0: terrainStaticDataIds.floor,
-  1: terrainStaticDataIds.wall
+  0: staticDataIds.terrain.floor,
+  1: staticDataIds.terrain.wall
 };
 
 const featureAreaOffset = new Phaser.Geom.Point(2, 2);
@@ -96,12 +96,12 @@ function allocateBuildingFeatures(mapData: TownMapData, availableAreas: Phaser.G
 
     for (let y = building.y; y < building.bottom; ++y) {
       for (let x = building.x; x < building.right; ++x) {
-        mapData.setCell(x, y, [terrainStaticDataIds.wall]);
+        mapData.setCell(x, y, [staticDataIds.terrain.wall]);
       }
     }
 
     const { x, y } = buildingFeature.entrance;
-    mapData.setCell(x, y, [terrainStaticDataIds.entrance]);
+    mapData.setCell(x, y, [staticDataIds.terrain.entrance]);
 
     mapData.features.buildings.push(buildingFeature);
   }
