@@ -8,7 +8,8 @@ export function populateTown(
   mapData: TownMapData,
   entityManager: EntityManager,
   entityStaticDataManager: EntityStaticDataManager,
-  scheduler: Scheduler
+  scheduler: Scheduler,
+  rng: Phaser.Math.RandomDataGenerator
 ): void {
   const terrainEntityFactory = entityManager.createFactory(TerrainEntity);
 
