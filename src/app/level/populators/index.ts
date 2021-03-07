@@ -1,0 +1,1 @@
+export { populateTown } from './town';

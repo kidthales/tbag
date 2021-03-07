@@ -1,3 +1,4 @@
+import { EntityStaticDataManager } from '../entities';
 import { LocalStoragePlugin, LocalStorageScene } from '../plugins/local-storage';
 import { World, WorldData, WorldDataConfig } from '../world';
 
@@ -17,12 +18,7 @@ export class MainScene extends Phaser.Scene implements LocalStorageScene {
       glyphs: {
         default: this.cache.json.get('glyphs')
       },
-      staticData: {
-        terrain: this.cache.json.get('terrain'),
-        creature: this.cache.json.get('creature'),
-        item: this.cache.json.get('item'),
-        ephemeral: this.cache.json.get('ephemeral')
-      }
+      entityStaticDataManager: new EntityStaticDataManager(this.cache.json)
     };
 
     const worldData = new WorldData(worldDataConfig);
