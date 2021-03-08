@@ -1,8 +1,13 @@
 import { Type } from '../../utils';
 
+import { CreatureEntity } from '../creature';
 import { EntityConstructorParameters } from '../entity-constructor-parameters';
 import { EntityFactory } from '../entity-factory';
+import { EntityType } from '../entity-type';
 import { EntityUnion } from '../entity-union';
+import { EphemeralEntity } from '../ephemeral';
+import { ItemEntity } from '../item';
+import { TerrainEntity } from '../terrain';
 
 import { EntityManagerState } from './entity-manager-state';
 
@@ -13,7 +18,30 @@ export class EntityManager {
     if (!state) {
       this.entities = new Map();
     } else {
-      this.entities = state.entities.reduce((map, entity) => map.set(entity.id, entity), new Map());
+      this.entities = state.entities.reduce((map, { type, id, staticDataId, data }) => {
+        let entity: EntityUnion;
+
+        switch (type) {
+          case EntityType.Terrain:
+            entity = new TerrainEntity(id, staticDataId, data);
+            break;
+          case EntityType.Creature:
+            entity = new CreatureEntity(id, staticDataId, data);
+            break;
+          case EntityType.Item:
+            entity = new ItemEntity(id, staticDataId, data);
+            break;
+          case EntityType.Ephemeral:
+            entity = new EphemeralEntity(id, staticDataId, data);
+            break;
+          default:
+            return map;
+        }
+
+        map.set(entity.id, entity);
+
+        return map;
+      }, new Map<string, EntityUnion>());
     }
   }
 
