@@ -266,7 +266,8 @@ export class Level {
     const glyphs = this.getGlyphsFromRenderable(renderable);
 
     if (!glyphs.length) {
-      return;
+      // Not found...
+      glyphs.push(new Glyph('_', '#fff', undefined, this.levelScene.world.font));
     }
 
     normalizedEntity.gameobject = this.levelScene.add.glyphSprite(renderCoordinates.x, renderCoordinates.y, glyphs);
@@ -306,7 +307,14 @@ export class Level {
 
   protected getRenderable(entity: string | EntityUnion): number | number[] {
     const normalizedEntity = this.normalizeEntity(entity);
-    return normalizedEntity.getComponent(renderableComponentKey);
+
+    if (normalizedEntity.hasComponent(renderableComponentKey)) {
+      return normalizedEntity.getComponent(renderableComponentKey);
+    }
+
+    if (normalizedEntity.hasStaticComponent(renderableComponentKey, this.entityStaticDataManager)) {
+      return normalizedEntity.getStaticComponent(renderableComponentKey, this.entityStaticDataManager);
+    }
   }
 
   protected getGlyphsFromRenderable(renderable: number | number[]): Glyph[] {
