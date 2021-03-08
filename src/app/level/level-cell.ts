@@ -1,3 +1,4 @@
+import { AvatarEntity } from '../avatar';
 import {
   CreatureEntity,
   EntityType,
@@ -47,8 +48,19 @@ export class LevelCell {
 
   public get entities(): EntityUnion[] {
     const ids = this.ids;
-    const entities = this.level.entityManager;
-    return ids.map((id) => entities.get(id));
+    const entityManager = this.level.entityManager;
+
+    return ids
+      .map((id) => {
+        if (entityManager.has(id)) {
+          return entityManager.get(id);
+        }
+
+        if (id === AvatarEntity.id) {
+          return this.level.levelScene.avatar;
+        }
+      })
+      .filter(Boolean);
   }
 
   public get terrain(): TerrainEntity {
@@ -76,6 +88,10 @@ export class LevelCell {
 
     if (entityManager.has(id)) {
       return entityManager.get(id) as CreatureEntity;
+    }
+
+    if (id === AvatarEntity.id) {
+      return this.level.levelScene.avatar;
     }
   }
 
@@ -130,7 +146,7 @@ export class LevelCell {
   }
 
   public addEntity(entity: string | EntityUnion): boolean {
-    const normalizedEntity = typeof entity === 'string' ? this.level.entityManager.get(entity) : entity;
+    const normalizedEntity = this.normalizeEntity(entity);
     const data = this.data;
 
     switch (normalizedEntity.type) {
@@ -181,7 +197,7 @@ export class LevelCell {
   }
 
   public removeEntity(entity: string | EntityUnion): boolean {
-    const normalizedEntity = typeof entity === 'string' ? this.level.entityManager.get(entity) : entity;
+    const normalizedEntity = this.normalizeEntity(entity);
     const data = this.data;
 
     switch (normalizedEntity.type) {
@@ -283,5 +299,19 @@ export class LevelCell {
             return;
         }
       });
+  }
+
+  protected normalizeEntity(entity: string | EntityUnion): EntityUnion {
+    if (typeof entity === 'string') {
+      if (this.level.entityManager.has(entity)) {
+        return this.level.entityManager.get(entity);
+      }
+
+      if (entity === AvatarEntity.id) {
+        return this.level.levelScene.avatar;
+      }
+    } else {
+      return entity;
+    }
   }
 }

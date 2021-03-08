@@ -1,3 +1,7 @@
+import { AvatarEntity } from '../avatar';
+
 export interface LevelSceneLaunchData {
-  firstTime?: boolean;
+  avatar: AvatarEntity;
+  fromSave?: boolean;
+  populate?: boolean;
 }

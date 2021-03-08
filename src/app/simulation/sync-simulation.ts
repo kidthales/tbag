@@ -8,12 +8,6 @@ const schedulerSentinel = 'sentinel';
 
 export function syncSimulation(world: World, level: Level, rng: Phaser.Math.RandomDataGenerator): void {
   const worldScheduler = world.scheduler;
-
-  if (!level.schedulerState) {
-    level.entityManager.forEach(({ id }) => worldScheduler.add(id, true, 1));
-    return;
-  }
-
   const oldScheduler = new Scheduler(level.schedulerState);
 
   if (oldScheduler.time < worldScheduler.time) {

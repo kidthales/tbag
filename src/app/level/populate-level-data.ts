@@ -17,3 +17,4 @@ export function populateLevelData(
       break;
   }
 }
+//level.entityManager.forEach(({ id }) => worldScheduler.add(id, true, 1));

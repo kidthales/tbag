@@ -1,4 +1,6 @@
-import { EntityStaticDataManager } from '../entities';
+import { AvatarEntity } from '../avatar';
+import { avatarRenderable } from '../configs';
+import { EntityStaticDataManager, renderableComponentKey } from '../entities';
 import { LevelData, LevelScene, LevelType } from '../level';
 import { Font, GlyphTileset } from '../plugins/glyph';
 import { LocalStorageScene } from '../plugins/local-storage';
@@ -77,7 +79,11 @@ export class World {
     const levelScene = new LevelScene('town', this);
 
     this.scene.scene.add(levelScene.id, levelScene, false, {});
-    this.scene.scene.launch(levelScene.id, { firstTime: true });
+    this.scene.scene.launch(levelScene.id, {
+      avatar: new AvatarEntity(0, { [renderableComponentKey]: avatarRenderable }),
+      populate: true,
+      fromSave: false
+    });
   }
 
   //protected onTick(time: number): void {}

@@ -1,3 +1,4 @@
+import { AvatarEntity } from '../avatar';
 import {
   EntityManager,
   EntityStaticDataManager,
@@ -235,13 +236,17 @@ export class Level {
     );
   }
 
-  protected getCellFromTile(tile: GlyphTile): LevelCell {
-    const { x, y } = tile;
-    return new LevelCell(this, x, y, this.levelData.mapData.getCell(x, y), tile);
+  public setCameraBounds(camera?: Phaser.Cameras.Scene2D.Camera): this {
+    const normalizedCamera = camera || this.levelData.levelScene.cameras.main;
+    const { x, y, widthInPixels, heightInPixels } = this.glyphmap.getLayer(undefined);
+
+    normalizedCamera.setBounds(x, y, widthInPixels, heightInPixels);
+
+    return this;
   }
 
-  protected allocateGameObject(entity: string | EntityUnion): Phaser.GameObjects.GameObject {
-    const normalizedEntity = typeof entity === 'string' ? this.entityManager.get(entity) : entity;
+  public allocateGameObject(entity: string | EntityUnion): Phaser.GameObjects.GameObject {
+    const normalizedEntity = this.normalizeEntity(entity);
 
     if (normalizedEntity.gameobject) {
       return normalizedEntity.gameobject;
@@ -251,14 +256,9 @@ export class Level {
       return;
     }
 
-    const position = normalizedEntity.getComponent<PositionComponentData>(positionComponentKey);
-
-    const { x: cellX, y: cellY } = position;
-    const cell = this.getCell(cellX, cellY);
-    const tile = cell.tile;
-
-    const offsetX = tile.width / 2;
-    const offsetY = tile.height / 2;
+    const renderCoordinates = this.getRenderCoordinates(
+      normalizedEntity.getComponent<PositionComponentData>(positionComponentKey)
+    );
 
     const renderable = this.getRenderable(entity);
 
@@ -269,12 +269,43 @@ export class Level {
       return;
     }
 
-    normalizedEntity.gameobject = this.levelScene.add.glyphSprite(cell.worldX + offsetX, cell.worldY + offsetY, glyphs);
+    normalizedEntity.gameobject = this.levelScene.add.glyphSprite(renderCoordinates.x, renderCoordinates.y, glyphs);
+
     return normalizedEntity.gameobject;
   }
 
+  protected getCellFromTile(tile: GlyphTile): LevelCell {
+    const { x, y } = tile;
+    return new LevelCell(this, x, y, this.levelData.mapData.getCell(x, y), tile);
+  }
+
+  protected normalizeEntity(entity: string | EntityUnion): EntityUnion {
+    if (typeof entity === 'string') {
+      if (this.entityManager.has(entity)) {
+        return this.entityManager.get(entity);
+      }
+
+      if (entity === AvatarEntity.id) {
+        return this.levelScene.avatar;
+      }
+    } else {
+      return entity;
+    }
+  }
+
+  protected getRenderCoordinates(position: PositionComponentData): Phaser.Geom.Point {
+    const { x: cellX, y: cellY } = position;
+    const cell = this.getCell(cellX, cellY);
+    const tile = cell.tile;
+
+    const offsetX = tile.width / 2;
+    const offsetY = tile.height / 2;
+
+    return new Phaser.Geom.Point(cell.worldX + offsetX, cell.worldY + offsetY);
+  }
+
   protected getRenderable(entity: string | EntityUnion): number | number[] {
-    const normalizedEntity = typeof entity === 'string' ? this.entityManager.get(entity) : entity;
+    const normalizedEntity = this.normalizeEntity(entity);
     return normalizedEntity.getComponent(renderableComponentKey);
   }
 

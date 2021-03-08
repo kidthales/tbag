@@ -1,1 +1,8 @@
-[]
+[
+  {
+    "description": {
+      "name": "Human"
+    },
+    "renderable": 21
+  }
+]
