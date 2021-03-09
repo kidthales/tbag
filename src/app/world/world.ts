@@ -1,5 +1,5 @@
 import { AvatarEntity } from '../avatar';
-import { avatarRenderable } from '../configs';
+import { avatarConfig } from '../configs';
 import { EntityStaticDataManager, renderableComponentKey } from '../entities';
 import { LevelData, LevelScene, LevelType } from '../level';
 import { Font, GlyphTileset } from '../plugins/glyph';
@@ -80,7 +80,7 @@ export class World {
 
     this.scene.scene.add(levelScene.id, levelScene, false, {});
     this.scene.scene.launch(levelScene.id, {
-      avatar: new AvatarEntity(0, { [renderableComponentKey]: avatarRenderable }),
+      avatar: new AvatarEntity(0, { [renderableComponentKey]: avatarConfig.renderable }),
       populate: true,
       fromSave: false
     });

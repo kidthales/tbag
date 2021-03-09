@@ -1,4 +1,4 @@
-import { entityStaticDataIds } from '../../../configs';
+import { entityStaticDataIdConfig } from '../../../configs';
 import { EntityFactory, EntityStaticDataManager, TerrainData, TerrainEntity } from '../../../entities';
 import { TownMapData } from '../../../map';
 
@@ -15,7 +15,7 @@ export function assignBuildings(
   mapData.features.buildings.forEach((buildingFeature) => {
     const { x, y } = buildingFeature.entrance;
 
-    terrainEntityFactory(entityStaticDataIds.terrain.entrance, {
+    terrainEntityFactory(entityStaticDataIdConfig.terrain.entrance, {
       renderable: renderable[index++ % renderable.length],
       position: { x, y }
     });

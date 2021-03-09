@@ -1,2 +1,3 @@
-export * from './avatar-renderable';
-export * from './entity-static-data-ids';
+export * from './avatar-config';
+export * from './default-input-config';
+export * from './entity-static-data-id-config';

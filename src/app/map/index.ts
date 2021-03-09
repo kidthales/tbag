@@ -1,4 +1,4 @@
-export { CardinalDirection, IntercardinalDirection, translate } from './direction';
+export { CardinalDirection, Direction, IntercardinalDirection, translate } from './direction';
 export * from './generate-map-data';
 export { TownMapData } from './generators';
 export * from './map-cell';

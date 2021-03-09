@@ -1,8 +1,8 @@
 import { CardinalDirection } from './cardinal-direction';
 
 export enum IntercardinalDirection {
-  NorthEast = CardinalDirection.North + CardinalDirection.East,
-  SouthEast = CardinalDirection.South + CardinalDirection.East,
-  SouthWest = CardinalDirection.South + CardinalDirection.West,
-  NorthWest = CardinalDirection.North + CardinalDirection.West
+  Northeast = CardinalDirection.North + CardinalDirection.East,
+  Southeast = CardinalDirection.South + CardinalDirection.East,
+  Southwest = CardinalDirection.South + CardinalDirection.West,
+  Northwest = CardinalDirection.North + CardinalDirection.West
 }

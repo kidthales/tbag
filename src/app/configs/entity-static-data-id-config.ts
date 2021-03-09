@@ -1,4 +1,4 @@
-export const entityStaticDataIds = {
+export const entityStaticDataIdConfig = {
   terrain: {
     wall: 0,
     floor: 1,

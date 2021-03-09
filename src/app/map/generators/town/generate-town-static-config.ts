@@ -1,12 +1,12 @@
-import { entityStaticDataIds } from '../../../configs';
+import { entityStaticDataIdConfig } from '../../../configs';
 
 export const generateTownStaticConfig = {
   minMapDimensions: { width: 80, height: 25 },
   maxMapDimensions: { width: 80, height: 25 },
 
   arenaIndexToTerrainStaticDataId: {
-    0: entityStaticDataIds.terrain.floor,
-    1: entityStaticDataIds.terrain.wall
+    0: entityStaticDataIdConfig.terrain.floor,
+    1: entityStaticDataIdConfig.terrain.wall
   },
 
   featureAreaOffset: new Phaser.Geom.Point(2, 2),

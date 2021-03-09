@@ -1,7 +1,10 @@
+import { MoveAction, MoveActionDirection } from '../actions';
 import { AvatarEntity } from '../avatar';
+import { defaultInputConfig } from '../configs';
 import { Effect, scheduleEffects, ScheduledEffects } from '../effects';
 import { PositionComponentData, positionComponentKey } from '../entities';
-import { generateMapData } from '../map';
+import { InputName } from '../input';
+import { Direction, generateMapData, translate } from '../map';
 import {
   GlyphPlugin,
   GlyphScene,
@@ -10,7 +13,7 @@ import {
   GlyphSceneGameObjectFactory,
   GlyphSceneLoaderPlugin
 } from '../plugins/glyph';
-import { runSimulation, syncSimulation } from '../simulation';
+import { applyAction, runSimulation, syncSimulation, validateAction } from '../simulation';
 import { World } from '../world';
 
 import { Level } from './level';
@@ -35,6 +38,19 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
   protected rng: Phaser.Math.RandomDataGenerator;
 
   protected avatarTurn = false;
+
+  protected allowInput = false;
+
+  protected inputMap: Record<InputName, () => void> = {
+    [InputName.MoveOrMeleeAttackNorth]: () => this.onMoveOrMeleeAttackNorth(),
+    [InputName.MoveOrMeleeAttackNortheast]: () => this.onMoveOrMeleeAttackNortheast(),
+    [InputName.MoveOrMeleeAttackEast]: () => this.onMoveOrMeleeAttackEast(),
+    [InputName.MoveOrMeleeAttackSoutheast]: () => this.onMoveOrMeleeAttackSoutheast(),
+    [InputName.MoveOrMeleeAttackSouth]: () => this.onMoveOrMeleeAttackSouth(),
+    [InputName.MoveOrMeleeAttackSouthwest]: () => this.onMoveOrMeleeAttackSouthwest(),
+    [InputName.MoveOrMeleeAttackWest]: () => this.onMoveOrMeleeAttackWest(),
+    [InputName.MoveOrMeleeAttackNorthwest]: () => this.onMoveOrMeleeAttackNorthwest()
+  };
 
   public constructor(public readonly id: string, public readonly world: World) {
     super(id);
@@ -84,6 +100,8 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
 
     this.rng = rng;
     this.level = level;
+
+    this.initInput();
   }
 
   public create(launchData: LevelSceneLaunchData): void {
@@ -94,26 +112,133 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
 
   public update(time: number, delta: number): void {
     if (!this.avatarTurn) {
-      const level = this.level;
-      const rng = this.rng;
-      const scheduler = this.world.scheduler;
+      const {
+        level,
+        world: { scheduler },
+        rng
+      } = this;
 
       const effects = runSimulation(level, scheduler, rng, (id) => id === this.avatar.id);
-
-      this.avatarTurn = true;
 
       level.rngState = rng.state();
       level.schedulerState = scheduler.state;
       // TODO: Save game...
 
-      this.displayEffects(
-        effects,
-        () => {
-          // TODO: Player input...
+      this.beginAvatarTurn(effects);
+    }
+  }
+
+  protected initInput(): this {
+    defaultInputConfig.forEach((config) => {
+      const {
+        name: inputName,
+        key: { name: keyName, altKey, ctrlKey, shiftKey, emitOnRepeat }
+      } = config;
+      let {
+        key: { enableCapture }
+      } = config;
+
+      if (enableCapture === undefined) {
+        enableCapture = true;
+      }
+
+      const key = this.input.keyboard.addKey(keyName, enableCapture, emitOnRepeat);
+
+      key.on(
+        Phaser.Input.Keyboard.Events.DOWN,
+        (event: KeyboardEvent) => {
+          if (!this.allowInput || (altKey && !key.altKey) || (ctrlKey && !key.ctrlKey) || (shiftKey && !key.shiftKey)) {
+            return;
+          }
+
+          if (this.inputMap[inputName]) {
+            this.allowInput = false;
+            this.inputMap[inputName]();
+          }
         },
         this
       );
+    });
+
+    return this;
+  }
+
+  protected onMoveOrMeleeAttackNorth(): void {
+    this.attemptMoveOrMeleeAttack(Direction.North);
+  }
+
+  protected onMoveOrMeleeAttackNortheast(): void {
+    this.attemptMoveOrMeleeAttack(Direction.Northeast);
+  }
+
+  protected onMoveOrMeleeAttackEast(): void {
+    this.attemptMoveOrMeleeAttack(Direction.East);
+  }
+
+  protected onMoveOrMeleeAttackSoutheast(): void {
+    this.attemptMoveOrMeleeAttack(Direction.Southeast);
+  }
+
+  protected onMoveOrMeleeAttackSouth(): void {
+    this.attemptMoveOrMeleeAttack(Direction.South);
+  }
+
+  protected onMoveOrMeleeAttackSouthwest(): void {
+    this.attemptMoveOrMeleeAttack(Direction.Southwest);
+  }
+
+  protected onMoveOrMeleeAttackWest(): void {
+    this.attemptMoveOrMeleeAttack(Direction.West);
+  }
+
+  protected onMoveOrMeleeAttackNorthwest(): void {
+    this.attemptMoveOrMeleeAttack(Direction.Northwest);
+  }
+
+  protected attemptMoveOrMeleeAttack(direction: MoveActionDirection): void {
+    const { x: srcX, y: srcY } = this.avatar.getComponent<PositionComponentData>(positionComponentKey);
+    const [dstX, dstY] = translate(srcX, srcY, direction);
+
+    const dstCell = this.level.getCell(dstX, dstY);
+
+    if (dstCell.creature) {
+      // TODO: Attack...
+      this.allowInput = true;
+    } else {
+      this.attemptMove(direction);
     }
+  }
+
+  protected attemptMove(direction: MoveActionDirection): void {
+    const {
+      avatar,
+      level,
+      world: { scheduler },
+      rng
+    } = this;
+
+    const moveAction = new MoveAction({ actor: avatar, direction });
+
+    if (validateAction(moveAction, level, scheduler, rng)) {
+      const effects = applyAction(moveAction, level, scheduler, rng);
+
+      level.rngState = rng.state();
+      level.schedulerState = scheduler.state;
+      // TODO: Save game...
+
+      this.endAvatarTurn(effects);
+    } else {
+      this.allowInput = true;
+    }
+  }
+
+  protected beginAvatarTurn(effects: Effect[]): void {
+    this.avatarTurn = true;
+    this.displayEffects(effects, () => (this.allowInput = true), this);
+  }
+
+  protected endAvatarTurn(effects: Effect[]): void {
+    this.displayEffects(effects, () => (this.avatarTurn = false), this);
   }
 
   protected displayEffects(effects: Effect[], callback: () => void, context?: unknown): void {

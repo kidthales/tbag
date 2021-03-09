@@ -1,6 +1,6 @@
 import RNG from 'rot-js/lib/rng';
 
-import { entityStaticDataIds } from '../../../configs';
+import { entityStaticDataIdConfig } from '../../../configs';
 
 import { MapCell } from '../../map-cell';
 
@@ -25,12 +25,12 @@ export function allocateBuildingFeatures(mapData: TownMapData, availableAreas: P
 
     for (let y = building.y; y < building.bottom; ++y) {
       for (let x = building.x; x < building.right; ++x) {
-        mapData.setCell(x, y, new MapCell(entityStaticDataIds.terrain.wall));
+        mapData.setCell(x, y, new MapCell(entityStaticDataIdConfig.terrain.wall));
       }
     }
 
     const { x, y } = buildingFeature.entrance;
-    mapData.setCell(x, y, new MapCell(entityStaticDataIds.terrain.entrance));
+    mapData.setCell(x, y, new MapCell(entityStaticDataIdConfig.terrain.entrance));
 
     mapData.features.buildings.push(buildingFeature);
   }

@@ -2,12 +2,12 @@ import { IntercardinalDirection } from './intercardinal-direction';
 import { SecondaryIntercardinalDirectionComponent } from './secondary-intercardinal-direction-component';
 
 export enum SecondaryIntercardinalDirection {
-  NorthNorthEast = SecondaryIntercardinalDirectionComponent.North + IntercardinalDirection.NorthEast,
-  EastNorthEast = SecondaryIntercardinalDirectionComponent.East + IntercardinalDirection.NorthEast,
-  EastSouthEast = SecondaryIntercardinalDirectionComponent.East + IntercardinalDirection.SouthEast,
-  SouthSouthEast = SecondaryIntercardinalDirectionComponent.South + IntercardinalDirection.SouthEast,
-  SouthSouthWest = SecondaryIntercardinalDirectionComponent.South + IntercardinalDirection.SouthWest,
-  WestSouthWest = SecondaryIntercardinalDirectionComponent.West + IntercardinalDirection.SouthWest,
-  WestNorthWest = SecondaryIntercardinalDirectionComponent.West + IntercardinalDirection.NorthWest,
-  NorthNorthWest = SecondaryIntercardinalDirectionComponent.North + IntercardinalDirection.NorthWest
+  NorthNortheast = SecondaryIntercardinalDirectionComponent.North + IntercardinalDirection.Northeast,
+  EastNortheast = SecondaryIntercardinalDirectionComponent.East + IntercardinalDirection.Northeast,
+  EastSoutheast = SecondaryIntercardinalDirectionComponent.East + IntercardinalDirection.Southeast,
+  SouthSoutheast = SecondaryIntercardinalDirectionComponent.South + IntercardinalDirection.Southeast,
+  SouthSouthwest = SecondaryIntercardinalDirectionComponent.South + IntercardinalDirection.Southwest,
+  WestSouthwest = SecondaryIntercardinalDirectionComponent.West + IntercardinalDirection.Southwest,
+  WestNorthwest = SecondaryIntercardinalDirectionComponent.West + IntercardinalDirection.Northwest,
+  NorthNorthwest = SecondaryIntercardinalDirectionComponent.North + IntercardinalDirection.Northwest
 }
