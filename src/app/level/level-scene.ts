@@ -1,10 +1,7 @@
-import { MoveAction, MoveActionDirection } from '../actions';
 import { AvatarEntity } from '../avatar';
-import { defaultInputConfig } from '../configs';
 import { Effect, scheduleEffects, ScheduledEffects } from '../effects';
 import { PositionComponentData, positionComponentKey } from '../entities';
-import { InputName } from '../input';
-import { Direction, generateMapData, translate } from '../map';
+import { generateMapData } from '../map';
 import {
   GlyphPlugin,
   GlyphScene,
@@ -13,11 +10,13 @@ import {
   GlyphSceneGameObjectFactory,
   GlyphSceneLoaderPlugin
 } from '../plugins/glyph';
-import { applyAction, runSimulation, syncSimulation, validateAction } from '../simulation';
+import { runSimulation, syncSimulation } from '../simulation';
 import { World } from '../world';
 
 import { Level } from './level';
+import { LevelData } from './level-data';
 import { LevelSceneLaunchData } from './level-scene-launch-data';
+import { LevelInputManager } from './managers';
 import { populateLevelData } from './populate-level-data';
 
 export class LevelScene extends Phaser.Scene implements GlyphScene {
@@ -39,69 +38,19 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
 
   protected avatarTurn = false;
 
-  protected allowInput = false;
-
-  protected inputMap: Record<InputName, () => void> = {
-    [InputName.MoveOrMeleeAttackNorth]: () => this.onMoveOrMeleeAttackNorth(),
-    [InputName.MoveOrMeleeAttackNortheast]: () => this.onMoveOrMeleeAttackNortheast(),
-    [InputName.MoveOrMeleeAttackEast]: () => this.onMoveOrMeleeAttackEast(),
-    [InputName.MoveOrMeleeAttackSoutheast]: () => this.onMoveOrMeleeAttackSoutheast(),
-    [InputName.MoveOrMeleeAttackSouth]: () => this.onMoveOrMeleeAttackSouth(),
-    [InputName.MoveOrMeleeAttackSouthwest]: () => this.onMoveOrMeleeAttackSouthwest(),
-    [InputName.MoveOrMeleeAttackWest]: () => this.onMoveOrMeleeAttackWest(),
-    [InputName.MoveOrMeleeAttackNorthwest]: () => this.onMoveOrMeleeAttackNorthwest()
-  };
+  protected levelInputManager: LevelInputManager;
 
   public constructor(public readonly id: string, public readonly world: World) {
     super(id);
   }
 
   public init(launchData: LevelSceneLaunchData): void {
-    this.avatar = launchData.avatar;
+    const { avatar, populate, fromSave } = launchData;
 
-    const world = this.world;
-    const levelData = world.levels.get(this.id);
+    const levelData = this.initLevelDataAndRng(populate && !fromSave);
 
-    levelData.levelScene = this;
-    levelData.mapData = generateMapData(levelData.type as any, levelData.seed);
-
-    const rng = new Phaser.Math.RandomDataGenerator(levelData.seed);
-
-    if (launchData.populate && !launchData.fromSave) {
-      levelData.rngState = undefined;
-      levelData.schedulerState = undefined;
-
-      levelData.entityManager.clear();
-
-      populateLevelData(levelData, world.scheduler, rng);
-    }
-
-    const level = new Level(levelData);
-
-    if (level.rngState) {
-      rng.state(level.rngState);
-    }
-
-    if (level.schedulerState && !launchData.fromSave) {
-      syncSimulation(world, level, rng);
-    }
-
-    if (!launchData.fromSave) {
-      // TODO: Assign avatar start position...
-      this.avatar.setComponent<PositionComponentData>(positionComponentKey, { x: 1, y: 1 });
-      world.scheduler.add(this.avatar.id, true, 0);
-    }
-
-    // TODO: Add avatar to map...
-    const cell = level.getCell(1, 1);
-    cell.addEntity(this.avatar);
-    level.allocateGameObject(this.avatar);
-    cell.refresh();
-
-    this.rng = rng;
-    this.level = level;
-
-    this.initInput();
+    this.initLevelAndLevelInputManager(levelData, fromSave);
+    this.initAvatar(avatar, fromSave);
   }
 
   public create(launchData: LevelSceneLaunchData): void {
@@ -112,129 +61,99 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
 
   public update(time: number, delta: number): void {
     if (!this.avatarTurn) {
-      const {
-        level,
-        world: { scheduler },
-        rng
-      } = this;
-
-      const effects = runSimulation(level, scheduler, rng, (id) => id === this.avatar.id);
-
-      level.rngState = rng.state();
-      level.schedulerState = scheduler.state;
-      // TODO: Save game...
-
-      this.beginAvatarTurn(effects);
+      this.updateSimulation();
     }
   }
 
-  protected initInput(): this {
-    defaultInputConfig.forEach((config) => {
-      const {
-        name: inputName,
-        key: { name: keyName, altKey, ctrlKey, shiftKey, emitOnRepeat }
-      } = config;
-      let {
-        key: { enableCapture }
-      } = config;
+  protected initLevelDataAndRng(populate: boolean): LevelData {
+    const world = this.world;
+    const levelData = world.levels.get(this.id);
 
-      if (enableCapture === undefined) {
-        enableCapture = true;
-      }
+    levelData.levelScene = this;
+    levelData.mapData = generateMapData(levelData.type as any, levelData.seed);
 
-      const key = this.input.keyboard.addKey(keyName, enableCapture, emitOnRepeat);
+    const rng = new Phaser.Math.RandomDataGenerator(levelData.seed);
 
-      key.on(
-        Phaser.Input.Keyboard.Events.DOWN,
-        (event: KeyboardEvent) => {
-          if (!this.allowInput || (altKey && !key.altKey) || (ctrlKey && !key.ctrlKey) || (shiftKey && !key.shiftKey)) {
-            return;
-          }
+    if (populate) {
+      levelData.rngState = undefined;
+      levelData.schedulerState = undefined;
 
-          if (this.inputMap[inputName]) {
-            this.allowInput = false;
-            this.inputMap[inputName]();
-          }
-        },
-        this
-      );
+      levelData.entityManager.clear();
+
+      populateLevelData(levelData, world.scheduler, rng);
+    }
+
+    this.rng = rng;
+
+    return levelData;
+  }
+
+  protected initLevelAndLevelInputManager(levelData: LevelData, fromSave: boolean): void {
+    const level = (this.level = new Level(levelData));
+    const rng = this.rng;
+
+    if (level.rngState) {
+      rng.state(level.rngState);
+    }
+
+    if (level.schedulerState && !fromSave) {
+      syncSimulation(this.world, level, rng);
+    }
+
+    this.levelInputManager = new LevelInputManager(level, rng, (effects: Effect[]) => {
+      this.save();
+      this.endAvatarTurn(effects);
     });
-
-    return this;
   }
 
-  protected onMoveOrMeleeAttackNorth(): void {
-    this.attemptMoveOrMeleeAttack(Direction.North);
-  }
+  protected initAvatar(avatar: AvatarEntity, fromSave: boolean): void {
+    this.avatar = avatar;
 
-  protected onMoveOrMeleeAttackNortheast(): void {
-    this.attemptMoveOrMeleeAttack(Direction.Northeast);
-  }
-
-  protected onMoveOrMeleeAttackEast(): void {
-    this.attemptMoveOrMeleeAttack(Direction.East);
-  }
-
-  protected onMoveOrMeleeAttackSoutheast(): void {
-    this.attemptMoveOrMeleeAttack(Direction.Southeast);
-  }
-
-  protected onMoveOrMeleeAttackSouth(): void {
-    this.attemptMoveOrMeleeAttack(Direction.South);
-  }
-
-  protected onMoveOrMeleeAttackSouthwest(): void {
-    this.attemptMoveOrMeleeAttack(Direction.Southwest);
-  }
-
-  protected onMoveOrMeleeAttackWest(): void {
-    this.attemptMoveOrMeleeAttack(Direction.West);
-  }
-
-  protected onMoveOrMeleeAttackNorthwest(): void {
-    this.attemptMoveOrMeleeAttack(Direction.Northwest);
-  }
-
-  protected attemptMoveOrMeleeAttack(direction: MoveActionDirection): void {
-    const { x: srcX, y: srcY } = this.avatar.getComponent<PositionComponentData>(positionComponentKey);
-    const [dstX, dstY] = translate(srcX, srcY, direction);
-
-    const dstCell = this.level.getCell(dstX, dstY);
-
-    if (dstCell.creature) {
-      // TODO: Attack...
-      this.allowInput = true;
-    } else {
-      this.attemptMove(direction);
+    if (!fromSave) {
+      // TODO: Assign avatar start position...
+      avatar.setComponent<PositionComponentData>(positionComponentKey, { x: 1, y: 1 });
+      this.world.scheduler.add(avatar.id, true, 0);
     }
+
+    const level = this.level;
+
+    level.allocateGameObject(avatar);
+
+    const { x, y } = avatar.getComponent<PositionComponentData>(positionComponentKey);
+    const cell = level.getCell(x, y);
+
+    cell.addEntity(avatar);
+    cell.refresh();
   }
 
-  protected attemptMove(direction: MoveActionDirection): void {
+  protected updateSimulation(): void {
     const {
-      avatar,
       level,
       world: { scheduler },
       rng
     } = this;
 
-    const moveAction = new MoveAction({ actor: avatar, direction });
+    const effects = runSimulation(level, scheduler, rng, (id) => id === this.avatar.id);
 
-    if (validateAction(moveAction, level, scheduler, rng)) {
-      const effects = applyAction(moveAction, level, scheduler, rng);
+    this.save();
+    this.beginAvatarTurn(effects);
+  }
 
-      level.rngState = rng.state();
-      level.schedulerState = scheduler.state;
-      // TODO: Save game...
+  protected save(): void {
+    const {
+      level,
+      world: { scheduler },
+      rng
+    } = this;
 
-      this.endAvatarTurn(effects);
-    } else {
-      this.allowInput = true;
-    }
+    level.rngState = rng.state();
+    level.schedulerState = scheduler.state;
+    // TODO: Save game...
   }
 
   protected beginAvatarTurn(effects: Effect[]): void {
     this.avatarTurn = true;
-    this.displayEffects(effects, () => (this.allowInput = true), this);
+    this.displayEffects(effects, () => (this.levelInputManager.allowInput = true), this);
   }
 
   protected endAvatarTurn(effects: Effect[]): void {
