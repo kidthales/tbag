@@ -28,10 +28,12 @@ export const creatureMoveEffectFactory: EffectFactory<
   const dx = dstCell.worldX - srcCell.worldX;
   const dy = dstCell.worldY - srcCell.worldY;
 
+  const finalX = dstCell.worldX + dstCell.tile.width / 2;
+  const finalY = dstCell.worldY + dstCell.tile.height / 2;
+
   if (skip || !gameobject || isLevelCellsCulled(level, [srcCell, dstCell])) {
     if (gameobject) {
-      gameobject.x += dx;
-      gameobject.y += dy;
+      gameobject.setPosition(finalX, finalY);
     }
 
     refreshLevelCells([srcCell, dstCell]);
@@ -66,7 +68,10 @@ export const creatureMoveEffectFactory: EffectFactory<
             }
           },
           onUpdateScope: this,
-          onComplete: (tween: Phaser.Tweens.Tween, targets: any[], ...param: any[]) => callback.call(context || scene),
+          onComplete: (tween: Phaser.Tweens.Tween, targets: any[], ...param: any[]) => {
+            gameobject.setPosition(finalX, finalY);
+            callback.call(context || scene);
+          },
           onCompleteScope: this
         });
       }

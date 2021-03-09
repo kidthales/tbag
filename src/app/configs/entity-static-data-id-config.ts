@@ -5,5 +5,8 @@ export const entityStaticDataIdConfig = {
     door: 2,
     entrance: 3,
     stairs: 4
+  },
+  creature: {
+    human: 0
   }
 };

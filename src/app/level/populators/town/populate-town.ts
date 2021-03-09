@@ -1,4 +1,5 @@
-import { EntityManager, EntityStaticDataManager, TerrainEntity } from '../../../entities';
+import { entityStaticDataIdConfig } from '../../../configs';
+import { CreatureEntity, EntityManager, EntityStaticDataManager, TerrainEntity } from '../../../entities';
 import { TownMapData } from '../../../map';
 import { Scheduler } from '../../../scheduler';
 
@@ -12,6 +13,18 @@ export function populateTown(
   rng: Phaser.Math.RandomDataGenerator
 ): void {
   const terrainEntityFactory = entityManager.createFactory(TerrainEntity);
+  const creatureEntityFactory = entityManager.createFactory(CreatureEntity);
 
   assignBuildings(mapData, entityStaticDataManager, terrainEntityFactory);
+
+  // TODO: Testing...
+  mapData.features.unusedAreas.forEach((area) => {
+    const { x, y } = area.getRandomPoint();
+
+    const human = creatureEntityFactory(entityStaticDataIdConfig.creature.human, {
+      position: { x: Math.floor(x), y: Math.floor(y) }
+    });
+
+    scheduler.add(human.id, true, 1);
+  });
 }
