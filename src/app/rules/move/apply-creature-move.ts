@@ -27,12 +27,7 @@ export function applyCreatureMove(
   position.x = dstCell.x;
   position.y = dstCell.y;
 
-  // TODO: Testing...
-  if (creature.id === 'avatar') {
-    scheduler.setDuration(10);
-  } else {
-    scheduler.setDuration(rng.integerInRange(1, 2));
-  }
+  scheduler.setDuration(rng.integerInRange(1, 2));
 
   return moveEffectFactory(scheduler.time, creature, level, { srcCell, dstCell }, skipEffects);
 }
