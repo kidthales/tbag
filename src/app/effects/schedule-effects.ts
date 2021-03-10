@@ -40,7 +40,7 @@ export function scheduleEffects(effects: Effect[]): ScheduledEffects {
       candidateIds.push(id);
     }
 
-    concurrentIds.concat(candidateIds);
+    concurrentIds.push(...candidateIds);
     concurrent.push(effect);
   });
 
