@@ -12,7 +12,7 @@ export class WorldData {
   /**
    * Default font for glyphs.
    */
-  protected static readonly defaultFont = new Font(32, 'monospace');
+  protected static readonly defaultFont = new Font(28, 'monospace');
 
   /**
    * Font for glyphs.

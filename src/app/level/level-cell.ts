@@ -25,11 +25,11 @@ export class LevelCell {
   ) {}
 
   public get worldX(): number {
-    return this.level.cellToWorldX(this.x);
+    return this.level.cellToWorldX(this.x, this.level.levelScene.cameras.getCamera('world'));
   }
 
   public get worldY(): number {
-    return this.level.cellToWorldY(this.y);
+    return this.level.cellToWorldY(this.y, this.level.levelScene.cameras.getCamera('world'));
   }
 
   public get terrainStaticData(): TerrainStaticData {

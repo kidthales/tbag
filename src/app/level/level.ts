@@ -17,14 +17,18 @@ import { LevelScene } from './level-scene';
 import { LevelType } from './level-type';
 
 export class Level {
+  protected readonly gameObjectGroup: Phaser.GameObjects.Group;
+
   protected readonly glyphmap: GlyphTilemap;
 
   public constructor(protected readonly levelData: LevelData) {
     const { font, glyphsets } = this.world;
     const { width, height } = this.levelData.mapData;
 
+    this.gameObjectGroup = this.levelScene.add.group();
+
     this.glyphmap = this.levelScene.add.glyphmap(undefined, width, height, font);
-    this.glyphmap.createBlankLayer('default', Array.from(glyphsets.values()));
+    this.gameObjectGroup.add(this.glyphmap.createBlankLayer('default', Array.from(glyphsets.values())));
 
     this.entityManager.forEach((entity) => {
       const position = entity.getComponent<PositionComponentData>(positionComponentKey);
@@ -245,6 +249,11 @@ export class Level {
     return this;
   }
 
+  public ignoreCamera(camera: Phaser.Cameras.Scene2D.Camera): this {
+    camera.ignore(this.gameObjectGroup);
+    return this;
+  }
+
   public allocateGameObject(entity: string | EntityUnion): Phaser.GameObjects.GameObject {
     const normalizedEntity = this.normalizeEntity(entity);
 
@@ -271,6 +280,8 @@ export class Level {
     }
 
     normalizedEntity.gameobject = this.levelScene.add.glyphSprite(renderCoordinates.x, renderCoordinates.y, glyphs);
+
+    this.gameObjectGroup.add(normalizedEntity.gameobject);
 
     return normalizedEntity.gameobject;
   }

@@ -55,8 +55,16 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
 
   public create(launchData: LevelSceneLaunchData): void {
     this.events.on(Phaser.Scenes.Events.DESTROY, this.onDestroy, this);
-    this.level.setCameraBounds(this.cameras.main);
-    this.cameras.main.startFollow(this.avatar.gameobject);
+
+    const {
+      worldViewport: { x, y, width, height }
+    } = launchData;
+
+    this.cameras.add(x, y, width, height, false, 'world');
+    this.level.ignoreCamera(this.cameras.main);
+    this.level.setCameraBounds(this.cameras.getCamera('world'));
+
+    this.cameras.getCamera('world').startFollow(this.avatar.gameobject);
   }
 
   public update(time: number, delta: number): void {
