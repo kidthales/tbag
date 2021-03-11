@@ -1,4 +1,4 @@
-import { MainScene } from './main-scene';
+import { MainScene } from './main';
 
 /**
  * Title scene.

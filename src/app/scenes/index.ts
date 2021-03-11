@@ -1,4 +1,4 @@
 export * from './boot-scene';
-export * from './main-scene';
+export { MainScene } from './main';
 export * from './preload-scene';
 export * from './title-scene';

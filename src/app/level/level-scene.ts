@@ -32,6 +32,8 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
 
   public avatar: AvatarEntity;
 
+  public levelCamera: Phaser.Cameras.Scene2D.Camera;
+
   protected level: Level;
 
   protected rng: Phaser.Math.RandomDataGenerator;
@@ -45,26 +47,19 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
   }
 
   public init(launchData: LevelSceneLaunchData): void {
-    const { avatar, populate, fromSave } = launchData;
+    const { avatar, levelViewport, populate, fromSave } = launchData;
 
     const levelData = this.initLevelDataAndRng(populate && !fromSave);
 
     this.initLevelAndLevelInputManager(levelData, fromSave);
     this.initAvatar(avatar, fromSave);
+    this.initCameras(levelViewport);
   }
 
   public create(launchData: LevelSceneLaunchData): void {
     this.events.on(Phaser.Scenes.Events.DESTROY, this.onDestroy, this);
 
-    const {
-      worldViewport: { x, y, width, height }
-    } = launchData;
-
-    this.cameras.add(x, y, width, height, false, 'world');
-    this.level.ignoreCamera(this.cameras.main);
-    this.level.setCameraBounds(this.cameras.getCamera('world'));
-
-    this.cameras.getCamera('world').startFollow(this.avatar.gameobject);
+    this.levelCamera.startFollow(this.avatar.gameobject);
   }
 
   public update(time: number, delta: number): void {
@@ -132,6 +127,15 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
 
     cell.addEntity(avatar);
     cell.refresh();
+  }
+
+  protected initCameras(levelViewport: Phaser.Geom.Rectangle): void {
+    const { x, y, width, height } = levelViewport;
+
+    this.levelCamera = this.cameras.add(x, y, width, height, false, 'level');
+
+    this.level.ignoreCamera(this.cameras.main);
+    this.level.setCameraBounds(this.levelCamera);
   }
 
   protected updateSimulation(): void {

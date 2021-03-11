@@ -29,6 +29,8 @@ export class WorldData {
    */
   public readonly entityStaticDataManager: EntityStaticDataManager;
 
+  public readonly worldViewport: Phaser.Geom.Rectangle;
+
   /**
    * Level data mappings.
    */
@@ -44,7 +46,14 @@ export class WorldData {
    *
    * @param worldDataConfig World data configuration.
    */
-  public constructor({ font, glyphs, entityStaticDataManager, levels, schedulerState }: WorldDataConfig) {
+  public constructor({
+    font,
+    glyphs,
+    entityStaticDataManager,
+    worldViewport,
+    levels,
+    schedulerState
+  }: WorldDataConfig) {
     this.font = Font.normalize(font || WorldData.defaultFont);
 
     let gid = 0;
@@ -57,6 +66,7 @@ export class WorldData {
     );
 
     this.entityStaticDataManager = entityStaticDataManager;
+    this.worldViewport = worldViewport;
 
     this.levels = new Map<string, LevelData>(
       Object.entries(levels || {}).map(([id, config]) => [id, new LevelData({ ...config, entityStaticDataManager })])

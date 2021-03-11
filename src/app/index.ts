@@ -1,3 +1,4 @@
+import { layoutConfig } from './configs';
 import { GlyphPlugin, LocalStoragePlugin } from './plugins';
 import { BootScene, MainScene, PreloadScene, TitleScene } from './scenes';
 
@@ -12,12 +13,7 @@ const gameConfig: Phaser.Types.Core.GameConfig = {
   dom: {
     createContainer: true
   },
-  scale: {
-    mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
-    width: 1600,
-    height: 900
-  },
+  scale: layoutConfig.scale,
   plugins: {
     global: [GlyphPlugin.pluginDefinition, LocalStoragePlugin.pluginDefinition]
   },

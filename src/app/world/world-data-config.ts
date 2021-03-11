@@ -22,10 +22,18 @@ export interface WorldDataConfig {
     [name: string]: GlyphVector[];
   };
 
+  /**
+   * Entity static data manager.
+   */
   entityStaticDataManager: EntityStaticDataManager;
 
   /**
-   * Persisted font state.
+   * World viewport location & dimensions.
+   */
+  worldViewport: Phaser.Geom.Rectangle;
+
+  /**
+   * Font configuration for glyphs.
    */
   font?: FontLike;
 

@@ -22,6 +22,8 @@ export class World {
    */
   public readonly entityStaticDataManager: EntityStaticDataManager;
 
+  public readonly worldViewport: Phaser.Geom.Rectangle;
+
   /**
    * Level data mappings.
    */
@@ -45,11 +47,12 @@ export class World {
    */
   public constructor(
     protected readonly scene: LocalStorageScene,
-    { font, glyphsets, entityStaticDataManager, levels, scheduler }: WorldData
+    { font, glyphsets, entityStaticDataManager, worldViewport, levels, scheduler }: WorldData
   ) {
     this.worldFont = font;
     this.glyphsets = glyphsets;
     this.entityStaticDataManager = entityStaticDataManager;
+    this.worldViewport = worldViewport;
     this.levels = levels;
     this.scheduler = scheduler;
 
@@ -67,12 +70,6 @@ export class World {
    * TODO: Replace this nonsense...
    */
   public run(): void {
-    this.scene.add.graphics({ x: 0, y: 0 }).fillStyle(0x0000ff).fillRect(0, 0, 100, 900);
-    this.scene.add.graphics({ x: 1350, y: 0 }).fillStyle(0xff0000).fillRect(0, 0, 250, 900);
-    this.scene.add.graphics({ x: 100, y: 700 }).fillStyle(0x00ff00).fillRect(0, 0, 1250, 200);
-
-    const worldViewport = new Phaser.Geom.Rectangle(110, 0, 1250, 700);
-
     this.levels.set(
       'town',
       new LevelData({
@@ -87,7 +84,7 @@ export class World {
     this.scene.scene.add(levelScene.id, levelScene, false, {});
     this.scene.scene.launch(levelScene.id, {
       avatar: new AvatarEntity(0, { [renderableComponentKey]: avatarConfig.renderable }),
-      worldViewport,
+      levelViewport: this.worldViewport,
       populate: true,
       fromSave: false
     });

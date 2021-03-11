@@ -121,7 +121,7 @@ export class Level {
     camera?: Phaser.Cameras.Scene2D.Camera
   ): LevelCell[] {
     return this.glyphmap
-      .getTilesWithinShape(shape, { isNotEmpty: false }, camera || this.levelData.levelScene.cameras.main)
+      .getTilesWithinShape(shape, { isNotEmpty: false }, camera || this.levelData.levelScene.levelCamera)
       .map((tile) => this.getCellFromTile(tile));
   }
 
@@ -164,11 +164,11 @@ export class Level {
   }
 
   public hasCellAtWorldXY(x: number, y: number, camera?: Phaser.Cameras.Scene2D.Camera): boolean {
-    return this.glyphmap.hasTileAtWorldXY(x, y, camera || this.levelData.levelScene.cameras.main);
+    return this.glyphmap.hasTileAtWorldXY(x, y, camera || this.levelData.levelScene.levelCamera);
   }
 
   public getCellAtWorldXY(x: number, y: number, camera?: Phaser.Cameras.Scene2D.Camera): LevelCell {
-    const tile = this.glyphmap.getTileAtWorldXY(x, y, true, camera || this.levelData.levelScene.cameras.main);
+    const tile = this.glyphmap.getTileAtWorldXY(x, y, true, camera || this.levelData.levelScene.levelCamera);
     return this.getCellFromTile(tile);
   }
 
@@ -186,17 +186,17 @@ export class Level {
         width,
         height,
         { isNotEmpty: false },
-        camera || this.levelData.levelScene.cameras.main
+        camera || this.levelData.levelScene.levelCamera
       )
       .map((tile) => this.getCellFromTile(tile));
   }
 
   public worldToCellX(x: number, snapToFloor: boolean, camera?: Phaser.Cameras.Scene2D.Camera): number {
-    return this.glyphmap.worldToTileX(x, snapToFloor, camera || this.levelData.levelScene.cameras.main);
+    return this.glyphmap.worldToTileX(x, snapToFloor, camera || this.levelData.levelScene.levelCamera);
   }
 
   public worldToCellY(y: number, snapToFloor: boolean, camera?: Phaser.Cameras.Scene2D.Camera): number {
-    return this.glyphmap.worldToTileY(y, snapToFloor, camera || this.levelData.levelScene.cameras.main);
+    return this.glyphmap.worldToTileY(y, snapToFloor, camera || this.levelData.levelScene.levelCamera);
   }
 
   public worldToCellXY(
@@ -206,15 +206,15 @@ export class Level {
     point?: Phaser.Math.Vector2,
     camera?: Phaser.Cameras.Scene2D.Camera
   ): Phaser.Math.Vector2 {
-    return this.glyphmap.worldToTileXY(x, y, snapToFloor, point, camera || this.levelData.levelScene.cameras.main);
+    return this.glyphmap.worldToTileXY(x, y, snapToFloor, point, camera || this.levelData.levelScene.levelCamera);
   }
 
   public cellToWorldX(x: number, camera?: Phaser.Cameras.Scene2D.Camera): number {
-    return this.glyphmap.tileToWorldX(x, camera || this.levelData.levelScene.cameras.main);
+    return this.glyphmap.tileToWorldX(x, camera || this.levelData.levelScene.levelCamera);
   }
 
   public cellToWorldY(y: number, camera?: Phaser.Cameras.Scene2D.Camera): number {
-    return this.glyphmap.tileToWorldY(y, camera || this.levelData.levelScene.cameras.main);
+    return this.glyphmap.tileToWorldY(y, camera || this.levelData.levelScene.levelCamera);
   }
 
   public cellToWorldXY(
@@ -223,25 +223,25 @@ export class Level {
     point?: Phaser.Math.Vector2,
     camera?: Phaser.Cameras.Scene2D.Camera
   ): Phaser.Math.Vector2 {
-    return this.glyphmap.tileToWorldXY(x, y, point, camera || this.levelData.levelScene.cameras.main);
+    return this.glyphmap.tileToWorldXY(x, y, point, camera || this.levelData.levelScene.levelCamera);
   }
 
   public cull(camera?: Phaser.Cameras.Scene2D.Camera): LevelCell[] {
     return this.glyphmap
       .getLayer(undefined)
-      .glyphmapLayer.cull(camera || this.levelData.levelScene.cameras.main)
+      .glyphmapLayer.cull(camera || this.levelData.levelScene.levelCamera)
       .map((tile) => this.getCellFromTile(tile));
   }
 
   public cullBounds(camera?: Phaser.Cameras.Scene2D.Camera): Phaser.Geom.Rectangle {
     return GlyphTilemapComponents.cullBounds(
       this.glyphmap.getLayer(undefined),
-      camera || this.levelData.levelScene.cameras.main
+      camera || this.levelData.levelScene.levelCamera
     );
   }
 
   public setCameraBounds(camera?: Phaser.Cameras.Scene2D.Camera): this {
-    const normalizedCamera = camera || this.levelData.levelScene.cameras.main;
+    const normalizedCamera = camera || this.levelData.levelScene.levelCamera;
     const { x, y, widthInPixels, heightInPixels } = this.glyphmap.getLayer(undefined);
 
     normalizedCamera.setBounds(x, y, widthInPixels, heightInPixels);
