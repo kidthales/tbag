@@ -12,14 +12,14 @@ export class LevelInputManager {
   public allowInput = false;
 
   protected inputMap: Record<InputName, () => void> = {
-    [InputName.MoveOrMeleeAttackNorth]: () => this.onMoveOrMeleeAttackNorth(),
-    [InputName.MoveOrMeleeAttackNortheast]: () => this.onMoveOrMeleeAttackNortheast(),
-    [InputName.MoveOrMeleeAttackEast]: () => this.onMoveOrMeleeAttackEast(),
-    [InputName.MoveOrMeleeAttackSoutheast]: () => this.onMoveOrMeleeAttackSoutheast(),
-    [InputName.MoveOrMeleeAttackSouth]: () => this.onMoveOrMeleeAttackSouth(),
-    [InputName.MoveOrMeleeAttackSouthwest]: () => this.onMoveOrMeleeAttackSouthwest(),
-    [InputName.MoveOrMeleeAttackWest]: () => this.onMoveOrMeleeAttackWest(),
-    [InputName.MoveOrMeleeAttackNorthwest]: () => this.onMoveOrMeleeAttackNorthwest()
+    [InputName.MoveOrDefaultActionNorth]: () => this.onMoveOrDefaultActionNorth(),
+    [InputName.MoveOrDefaultActionNortheast]: () => this.onMoveOrDefaultActionNortheast(),
+    [InputName.MoveOrDefaultActionEast]: () => this.onMoveOrDefaultActionEast(),
+    [InputName.MoveOrDefaultActionSoutheast]: () => this.onMoveOrDefaultActionSoutheast(),
+    [InputName.MoveOrDefaultActionSouth]: () => this.onMoveOrDefaultActionSouth(),
+    [InputName.MoveOrDefaultActionSouthwest]: () => this.onMoveOrDefaultActionSouthwest(),
+    [InputName.MoveOrDefaultActionWest]: () => this.onMoveOrDefaultActionWest(),
+    [InputName.MoveOrDefaultActionNorthwest]: () => this.onMoveOrDefaultActionNorthwest()
   };
 
   public constructor(
@@ -61,46 +61,46 @@ export class LevelInputManager {
     });
   }
 
-  protected onMoveOrMeleeAttackNorth(): void {
-    this.attemptMoveOrMeleeAttack(Direction.North);
+  protected onMoveOrDefaultActionNorth(): void {
+    this.attemptMoveOrDefaultAction(Direction.North);
   }
 
-  protected onMoveOrMeleeAttackNortheast(): void {
-    this.attemptMoveOrMeleeAttack(Direction.Northeast);
+  protected onMoveOrDefaultActionNortheast(): void {
+    this.attemptMoveOrDefaultAction(Direction.Northeast);
   }
 
-  protected onMoveOrMeleeAttackEast(): void {
-    this.attemptMoveOrMeleeAttack(Direction.East);
+  protected onMoveOrDefaultActionEast(): void {
+    this.attemptMoveOrDefaultAction(Direction.East);
   }
 
-  protected onMoveOrMeleeAttackSoutheast(): void {
-    this.attemptMoveOrMeleeAttack(Direction.Southeast);
+  protected onMoveOrDefaultActionSoutheast(): void {
+    this.attemptMoveOrDefaultAction(Direction.Southeast);
   }
 
-  protected onMoveOrMeleeAttackSouth(): void {
-    this.attemptMoveOrMeleeAttack(Direction.South);
+  protected onMoveOrDefaultActionSouth(): void {
+    this.attemptMoveOrDefaultAction(Direction.South);
   }
 
-  protected onMoveOrMeleeAttackSouthwest(): void {
-    this.attemptMoveOrMeleeAttack(Direction.Southwest);
+  protected onMoveOrDefaultActionSouthwest(): void {
+    this.attemptMoveOrDefaultAction(Direction.Southwest);
   }
 
-  protected onMoveOrMeleeAttackWest(): void {
-    this.attemptMoveOrMeleeAttack(Direction.West);
+  protected onMoveOrDefaultActionWest(): void {
+    this.attemptMoveOrDefaultAction(Direction.West);
   }
 
-  protected onMoveOrMeleeAttackNorthwest(): void {
-    this.attemptMoveOrMeleeAttack(Direction.Northwest);
+  protected onMoveOrDefaultActionNorthwest(): void {
+    this.attemptMoveOrDefaultAction(Direction.Northwest);
   }
 
-  protected attemptMoveOrMeleeAttack(direction: MoveActionDirection): void {
+  protected attemptMoveOrDefaultAction(direction: MoveActionDirection): void {
     const { x: srcX, y: srcY } = this.level.levelScene.avatar.getComponent<PositionComponentData>(positionComponentKey);
     const [dstX, dstY] = translate(srcX, srcY, direction);
 
     const dstCell = this.level.getCell(dstX, dstY);
 
     if (dstCell.creature) {
-      // TODO: Attack...
+      // TODO: Resolve default action based on dstCell contents...
       this.allowInput = true;
     } else {
       this.attemptMove(direction);
