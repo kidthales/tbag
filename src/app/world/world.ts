@@ -1,6 +1,5 @@
 import { AvatarEntity } from '../avatar';
-import { avatarConfig } from '../configs';
-import { EntityStaticDataManager, renderableComponentKey } from '../entities';
+import { EntityStaticDataManager } from '../entities';
 import { LevelData, LevelScene, LevelType } from '../level';
 import { Font, GlyphTileset } from '../plugins/glyph';
 import { LocalStorageScene } from '../plugins/local-storage';
@@ -22,7 +21,15 @@ export class World {
    */
   public readonly entityStaticDataManager: EntityStaticDataManager;
 
+  /**
+   * World viewport location & dimensions.
+   */
   public readonly worldViewport: Phaser.Geom.Rectangle;
+
+  /**
+   * Avatar entity.
+   */
+  public readonly avatar: AvatarEntity;
 
   /**
    * Level data mappings.
@@ -47,12 +54,13 @@ export class World {
    */
   public constructor(
     protected readonly scene: LocalStorageScene,
-    { font, glyphsets, entityStaticDataManager, worldViewport, levels, scheduler }: WorldData
+    { font, glyphsets, entityStaticDataManager, worldViewport, avatar, levels, scheduler }: WorldData
   ) {
     this.worldFont = font;
     this.glyphsets = glyphsets;
     this.entityStaticDataManager = entityStaticDataManager;
     this.worldViewport = worldViewport;
+    this.avatar = avatar;
     this.levels = levels;
     this.scheduler = scheduler;
 
@@ -83,7 +91,7 @@ export class World {
 
     this.scene.scene.add(levelScene.id, levelScene, false, {});
     this.scene.scene.launch(levelScene.id, {
-      avatar: new AvatarEntity(0, { [renderableComponentKey]: avatarConfig.renderable }),
+      avatar: this.avatar,
       levelViewport: this.worldViewport,
       populate: true,
       fromSave: false

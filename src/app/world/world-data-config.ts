@@ -1,3 +1,4 @@
+import { AvatarData } from '../avatar';
 import { EntityStaticDataManager } from '../entities';
 import { LevelDataConfig } from '../level';
 import { FontLike, GlyphVector } from '../plugins/glyph';
@@ -31,6 +32,16 @@ export interface WorldDataConfig {
    * World viewport location & dimensions.
    */
   worldViewport: Phaser.Geom.Rectangle;
+
+  /**
+   * Avatar data.
+   */
+  avatarData: AvatarData;
+
+  /**
+   * Avatar static data ID.
+   */
+  avatarStaticDataId: number;
 
   /**
    * Font configuration for glyphs.

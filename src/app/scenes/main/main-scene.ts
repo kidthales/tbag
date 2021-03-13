@@ -1,6 +1,5 @@
-import { layoutConfig } from '../../configs';
-import { EntityStaticDataManager } from '../../entities';
-import { Font } from '../../plugins/glyph';
+import { avatarConfig, entityStaticDataIdConfig, layoutConfig } from '../../configs';
+import { EntityStaticDataManager, renderableComponentKey } from '../../entities';
 import { LocalStoragePlugin, LocalStorageScene } from '../../plugins/local-storage';
 import { World, WorldData, WorldDataConfig } from '../../world';
 
@@ -28,6 +27,8 @@ export class MainScene extends Phaser.Scene implements LocalStorageScene {
       glyphs: { default: jsonCache.get('glyphs') },
       entityStaticDataManager: new EntityStaticDataManager(jsonCache),
       worldViewport: layoutConfig.mainScene.inWorld.worldViewport,
+      avatarData: { [renderableComponentKey]: avatarConfig.renderable },
+      avatarStaticDataId: entityStaticDataIdConfig.creature.human,
       font: layoutConfig.mainScene.inWorld.font
     };
 

@@ -1,3 +1,4 @@
+import { AvatarEntity } from '../avatar';
 import { EntityStaticDataManager } from '../entities';
 import { LevelData } from '../level';
 import { Font, GlyphTileset } from '../plugins/glyph';
@@ -29,7 +30,15 @@ export class WorldData {
    */
   public readonly entityStaticDataManager: EntityStaticDataManager;
 
+  /**
+   * World viewport location & dimensions.
+   */
   public readonly worldViewport: Phaser.Geom.Rectangle;
+
+  /**
+   * Avatar entity.
+   */
+  public readonly avatar: AvatarEntity;
 
   /**
    * Level data mappings.
@@ -51,6 +60,8 @@ export class WorldData {
     glyphs,
     entityStaticDataManager,
     worldViewport,
+    avatarData,
+    avatarStaticDataId,
     levels,
     schedulerState
   }: WorldDataConfig) {
@@ -67,6 +78,8 @@ export class WorldData {
 
     this.entityStaticDataManager = entityStaticDataManager;
     this.worldViewport = worldViewport;
+
+    this.avatar = new AvatarEntity(avatarStaticDataId, avatarData);
 
     this.levels = new Map<string, LevelData>(
       Object.entries(levels || {}).map(([id, config]) => [id, new LevelData({ ...config, entityStaticDataManager })])
