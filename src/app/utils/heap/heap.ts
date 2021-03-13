@@ -19,7 +19,7 @@ export class Heap<T = unknown, U = number, V extends HeapNode<T, U> = HeapNode<T
 
   public constructor(
     public readonly comparator: HeapNodeComparator<T, U, V> = function defaultComparator(a: V, b: V): boolean {
-      return a.metric < b.metric ? true : false;
+      return a.metric < b.metric;
     }
   ) {}
 
