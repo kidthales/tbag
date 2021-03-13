@@ -1,12 +1,12 @@
 import { Effect } from './effect';
-import { EffectType } from './effect-type';
+import { EffectPlaybackMode } from './effect-playback-mode';
+import { EffectUnion } from './effect-union';
 import { ScheduledEffects } from './scheduled-effects';
 
-export function scheduleEffects(effects: Effect[]): ScheduledEffects {
+export function scheduleEffects(effects: EffectUnion[]): ScheduledEffects {
   const scheduledEffects: ScheduledEffects = [];
 
-  let concurrent: Effect[] = [];
-  let concurrentIds: string[] = [];
+  let concurrent: EffectUnion[] = [];
 
   function pushConcurrent(): void {
     if (!concurrent.length) {
@@ -18,30 +18,19 @@ export function scheduleEffects(effects: Effect[]): ScheduledEffects {
   }
 
   effects.forEach((effect) => {
-    if (effect.type === EffectType.Sync) {
-      pushConcurrent();
-      scheduledEffects.push(effect);
-      return;
-    }
-
-    const ids = effect.ids;
-    let candidateIds: string[] = [];
-
-    for (let i = 0; i < ids.length; ++i) {
-      const id = ids[i];
-
-      if (concurrentIds.includes(id)) {
-        pushConcurrent();
-        concurrentIds.length = 0;
-        candidateIds = ids;
+    switch (effect.playbackMode) {
+      case EffectPlaybackMode.Async:
+        if (concurrent.some((prev) => Effect.shareEntityIds(effect, prev))) {
+          pushConcurrent();
+        }
+        concurrent.push(effect);
         break;
-      }
-
-      candidateIds.push(id);
+      //case EffectPlaybackMode.Sync:
+      default:
+        pushConcurrent();
+        scheduledEffects.push(effect);
+        break;
     }
-
-    concurrentIds.push(...candidateIds);
-    concurrent.push(effect);
   });
 
   pushConcurrent();

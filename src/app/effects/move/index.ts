@@ -1,2 +1,2 @@
-export * from './move-effect-data';
-export * from './move-effect-factory';
+export * from './move-effect';
+export * from './move-effect-payload';

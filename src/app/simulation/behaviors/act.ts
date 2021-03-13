@@ -1,11 +1,9 @@
 import { MoveAction, NoopAction } from '../../actions';
-import { Effect } from '../../effects';
+import { EffectUnion } from '../../effects';
 import { EntityUnion } from '../../entities';
 import { Level } from '../../level';
+import { validate } from '../../rules';
 import { Scheduler } from '../../scheduler';
-
-import { applyAction } from '../apply-action';
-import { validateAction } from '../validate-action';
 
 import { getRandomMoveActionDirection } from './get-random-move-action-direction';
 
@@ -15,13 +13,20 @@ export function act(
   scheduler: Scheduler,
   rng: Phaser.Math.RandomDataGenerator,
   skipEffects = false
-): Effect[] {
+): EffectUnion[] {
   const moveAction = new MoveAction({ actor: entity, direction: getRandomMoveActionDirection(rng) });
+  let applyAction = validate(moveAction, level, scheduler, rng);
 
-  if (validateAction(moveAction, level, scheduler, rng)) {
-    return applyAction(moveAction, level, scheduler, rng, skipEffects);
+  if (applyAction) {
+    return applyAction(skipEffects);
   }
 
   const noopAction = new NoopAction({ actor: entity, duration: 1 });
-  return applyAction(noopAction, level, scheduler, rng, skipEffects);
+  applyAction = validate(noopAction, level, scheduler, rng);
+
+  if (applyAction) {
+    return applyAction(skipEffects);
+  }
+
+  return [];
 }

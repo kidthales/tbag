@@ -1,10 +1,10 @@
 import { MoveAction, MoveActionDirection } from '../../actions';
 import { defaultInputConfig } from '../../configs';
-import { Effect } from '../../effects';
+import { EffectUnion } from '../../effects';
 import { PositionComponentData, positionComponentKey } from '../../entities';
 import { InputName } from '../../input';
 import { Direction, translate } from '../../map';
-import { applyAction, validateAction } from '../../simulation';
+import { validate } from '../../rules';
 
 import { Level } from '../level';
 
@@ -25,7 +25,7 @@ export class LevelInputManager {
   public constructor(
     protected readonly level: Level,
     protected readonly rng: Phaser.Math.RandomDataGenerator,
-    protected readonly afterAction: (effects: Effect[]) => void
+    protected readonly afterAction: (effects: EffectUnion[]) => void
   ) {
     const scene = level.levelScene;
 
@@ -118,9 +118,10 @@ export class LevelInputManager {
     } = scene;
 
     const moveAction = new MoveAction({ actor: avatar, direction });
+    const applyAction = validate(moveAction, level, scheduler, rng);
 
-    if (validateAction(moveAction, level, scheduler, rng)) {
-      const effects = applyAction(moveAction, level, scheduler, rng);
+    if (applyAction) {
+      const effects = applyAction();
       this.afterAction(effects);
     } else {
       this.allowInput = true;

@@ -1,2 +1,1 @@
-export { moveRule } from './move';
-export { noopRule } from './noop';
+export * from './validate';

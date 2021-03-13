@@ -1,3 +1,3 @@
-import { Effect } from './effect';
+import { EffectUnion } from './effect-union';
 
-export type ScheduledEffects = (Effect | Effect[])[];
+export type ScheduledEffects = (EffectUnion | EffectUnion[])[];

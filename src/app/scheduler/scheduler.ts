@@ -1,78 +1,116 @@
-import ActionScheduler from 'rot-js/lib/scheduler/action';
+import { Heap } from '../utils';
 
+import { SchedulerNode } from './scheduler-node';
 import { SchedulerState } from './scheduler-state';
 
 export class Scheduler {
   protected static readonly tickId = 'tick';
 
+  protected static readonly tickInsertionId = 0;
+
   protected static readonly tickEventName = 'tick';
+
+  protected static readonly defaultDuration = 1;
+
+  protected static clampTime(time: number): number {
+    return time >= 0 ? time : Scheduler.defaultDuration;
+  }
+
+  protected readonly heap = new Heap<string, number, SchedulerNode>((a, b) =>
+    a.metric === b.metric ? a.insertionId < b.insertionId : a.metric < b.metric
+  );
 
   protected readonly eventEmitter = new Phaser.Events.EventEmitter();
 
-  protected readonly scheduler = new ActionScheduler<string>();
+  protected time = 0;
+
+  protected insertionId = 0;
+
+  protected repeat: string[] = [];
+
+  protected current: string;
+
+  protected duration = Scheduler.defaultDuration;
 
   public constructor(state?: SchedulerState) {
     if (!state) {
-      this.scheduler.add(Scheduler.tickId, true, 0);
+      this.initTick();
     } else {
       this.load(state);
     }
   }
 
   public get length(): number {
-    return this.scheduler._queue._events.len() - 1;
+    return this.heap.size - 1;
   }
 
-  public get time(): number {
-    return this.scheduler.getTime();
+  public get currentTime(): number {
+    return this.time;
   }
 
   public get state(): SchedulerState {
     return {
-      defaultDuration: this.scheduler._defaultDuration,
-      duration: this.scheduler._duration,
-      current: this.scheduler._current,
-      repeat: this.scheduler._repeat,
-      queue: {
-        time: this.scheduler._queue._time,
-        events: {
-          heap: this.scheduler._queue._events['heap'],
-          timestamp: this.scheduler._queue._events['timestamp']
-        }
-      }
+      duration: this.duration,
+      current: this.current,
+      repeat: this.repeat,
+      time: this.time,
+      insertionId: this.insertionId,
+      heap: this.heap.state
     };
   }
 
   public load(state: SchedulerState): this {
-    this.scheduler._defaultDuration = state.defaultDuration;
-    this.scheduler._duration = state.duration;
-    this.scheduler._current = state.current;
-    this.scheduler._repeat = state.repeat;
+    this.duration = state.duration;
+    this.repeat = state.repeat;
+    this.time = state.time;
+    this.insertionId = state.insertionId;
 
-    this.scheduler._queue._time = state.queue.time;
+    this.heap.clear();
+    state.heap.nodes.forEach((node) => this.heap.push({ ...node }));
 
-    this.scheduler._queue._events['heap'] = state.queue.events.heap;
-    this.scheduler._queue._events['timestamp'] = state.queue.events.timestamp;
+    this.heap.push({ data: state.current, metric: 0, insertionId: Scheduler.tickInsertionId });
 
     return this;
   }
 
-  public add(id: string, repeat: boolean, initialDelay = 1): this {
+  public add(id: string, repeat: boolean, initialDelay = Scheduler.defaultDuration): this {
     if (id === Scheduler.tickId) {
-      return null;
+      return this;
     }
 
-    this.scheduler.add(id, repeat, initialDelay);
+    this.heap.push({ data: id, metric: initialDelay, insertionId: ++this.insertionId });
+
+    if (repeat) {
+      this.repeat.push(id);
+    }
+
     return this;
   }
 
   public getTimeUntil(id: string): number {
-    return this.scheduler.getTimeOf(id);
+    const node = this.heap.find((node) => node.data === id);
+    return node ? node.metric : undefined;
   }
 
-  public clear(): this {
-    this.scheduler.clear();
-    this.scheduler.add(Scheduler.tickId, true);
+  public reset(resetEventEmitter?: boolean): this {
+    this.time = 0;
+    return this.clear(resetEventEmitter);
+  }
+
+  public clear(resetEventEmitter?: boolean): this {
+    this.resetDuration();
+
+    this.heap.clear();
+    this.insertionId = 0;
+    this.repeat = [];
+    this.current = undefined;
+
+    if (resetEventEmitter) {
+      this.eventEmitter.removeAllListeners();
+    }
+
+    this.initTick();
+
     return this;
   }
 
@@ -81,31 +119,86 @@ export class Scheduler {
       return false;
     }
 
-    return this.scheduler.remove(id);
+    if (id === this.current) {
+      this.resetDuration();
+    }
+
+    const result = this.heap.remove(id);
+    const index = this.repeat.indexOf(id);
+
+    if (index != -1) {
+      this.repeat.splice(index, 1);
+    }
+
+    if (this.current === id) {
+      this.current = undefined;
+    }
+
+    return result;
   }
 
   public next(): string {
     if (!this.length) {
-      return null;
+      return;
     }
 
-    let id = this.scheduler.next();
+    const getNext = () => {
+      if (this.current !== undefined && this.repeat.indexOf(this.current) != -1) {
+        const { current: data, duration: metric } = this;
+
+        const insertionId = data === Scheduler.tickId || metric === 0 ? Scheduler.tickInsertionId : ++this.insertionId;
+
+        this.heap.push({ data, metric, insertionId });
+        this.resetDuration();
+      }
+
+      return (this.current = this.getNext());
+    };
+
+    let id = getNext();
 
     while (id === Scheduler.tickId) {
       this.eventEmitter.emit(Scheduler.tickEventName, this.time);
-      id = this.scheduler.next();
+      id = getNext();
     }
 
     return id;
   }
 
-  public setDuration(time: number): this {
-    this.scheduler.setDuration(time);
+  public setDuration(time): this {
+    if (this.current !== undefined) {
+      this.duration = Scheduler.clampTime(time);
+    }
+
     return this;
   }
 
   public onTick(listener: (time: number) => void, context?: unknown): this {
     this.eventEmitter.on(Scheduler.tickEventName, listener, context);
     return this;
+  }
+
+  protected initTick(): void {
+    this.heap.push({ data: Scheduler.tickId, metric: 0, insertionId: Scheduler.tickInsertionId });
+    this.repeat.push(Scheduler.tickId);
+  }
+
+  protected resetDuration(): void {
+    this.duration = Scheduler.defaultDuration;
+  }
+
+  protected getNext(): string {
+    if (!this.heap.size) {
+      return;
+    }
+
+    let { metric: time, data: id } = this.heap.pop();
+
+    if (time > 0) {
+      this.time += time;
+      this.heap.forEach((node) => (node.metric -= time));
+    }
+
+    return id;
   }
 }

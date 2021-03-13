@@ -28,7 +28,7 @@ export class MainScene extends Phaser.Scene implements LocalStorageScene {
       glyphs: { default: jsonCache.get('glyphs') },
       entityStaticDataManager: new EntityStaticDataManager(jsonCache),
       worldViewport: layoutConfig.mainScene.inWorld.worldViewport,
-      font: new Font(28, 'monospace')
+      font: layoutConfig.mainScene.inWorld.font
     };
 
     this.hudGroup = this.add.group();

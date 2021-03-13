@@ -1,5 +1,5 @@
 import { AvatarEntity } from '../avatar';
-import { Effect, scheduleEffects, ScheduledEffects } from '../effects';
+import { EffectUnion, scheduleEffects, ScheduledEffects } from '../effects';
 import { PositionComponentData, positionComponentKey } from '../entities';
 import { generateMapData } from '../map';
 import {
@@ -10,7 +10,7 @@ import {
   GlyphSceneGameObjectFactory,
   GlyphSceneLoaderPlugin
 } from '../plugins/glyph';
-import { runSimulation, syncSimulation } from '../simulation';
+import { Simulation } from '../simulation';
 import { World } from '../world';
 
 import { Level } from './level';
@@ -38,7 +38,11 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
 
   protected rng: Phaser.Math.RandomDataGenerator;
 
+  protected simulation: Simulation;
+
   protected avatarTurn = false;
+
+  protected playingEffects = false;
 
   protected levelInputManager: LevelInputManager;
 
@@ -51,7 +55,7 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
 
     const levelData = this.initLevelDataAndRng(populate && !fromSave);
 
-    this.initLevelAndLevelInputManager(levelData, fromSave);
+    this.initLevelAndSimulation(levelData, fromSave);
     this.initAvatar(avatar, fromSave);
     this.initCameras(levelViewport);
   }
@@ -63,7 +67,7 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
   }
 
   public update(time: number, delta: number): void {
-    if (!this.avatarTurn) {
+    if (!this.avatarTurn && !this.playingEffects) {
       this.updateSimulation();
     }
   }
@@ -91,7 +95,7 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
     return levelData;
   }
 
-  protected initLevelAndLevelInputManager(levelData: LevelData, fromSave: boolean): void {
+  protected initLevelAndSimulation(levelData: LevelData, fromSave: boolean): void {
     const level = (this.level = new Level(levelData));
     const rng = this.rng;
 
@@ -99,14 +103,13 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
       rng.state(level.rngState);
     }
 
+    this.simulation = new Simulation(this.world, level, rng);
+
     if (level.schedulerState && !fromSave) {
-      syncSimulation(this.world, level, rng);
+      this.simulation.sync();
     }
 
-    this.levelInputManager = new LevelInputManager(level, rng, (effects: Effect[]) => {
-      this.save();
-      this.endAvatarTurn(effects);
-    });
+    this.levelInputManager = new LevelInputManager(level, rng, (effects: EffectUnion[]) => this.endAvatarTurn(effects));
   }
 
   protected initAvatar(avatar: AvatarEntity, fromSave: boolean): void {
@@ -139,16 +142,32 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
   }
 
   protected updateSimulation(): void {
-    const {
-      level,
-      world: { scheduler },
-      rng
-    } = this;
+    const ids: string[] = [];
 
-    const effects = runSimulation(level, scheduler, rng, (id) => id === this.avatar.id);
+    let beginAvatarTurn = false;
 
-    this.save();
-    this.beginAvatarTurn(effects);
+    const effects = this.simulation.run((id) => {
+      if (id === this.avatar.id) {
+        beginAvatarTurn = true;
+        return true;
+      }
+
+      if (ids.includes(id)) {
+        this.world.scheduler.setDuration(0);
+        return true;
+      } else {
+        ids.push(id);
+      }
+
+      return false;
+    });
+
+    if (beginAvatarTurn) {
+      this.beginAvatarTurn(effects);
+    } else {
+      this.playingEffects = true;
+      this.displayEffects(effects, () => (this.playingEffects = false));
+    }
   }
 
   protected save(): void {
@@ -163,19 +182,21 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
     // TODO: Save game...
   }
 
-  protected beginAvatarTurn(effects: Effect[]): void {
+  protected beginAvatarTurn(effects: EffectUnion[]): void {
     this.avatarTurn = true;
+    this.save();
     this.displayEffects(effects, () => (this.levelInputManager.allowInput = true), this);
   }
 
-  protected endAvatarTurn(effects: Effect[]): void {
+  protected endAvatarTurn(effects: EffectUnion[]): void {
+    this.save();
     this.displayEffects(effects, () => (this.avatarTurn = false), this);
   }
 
-  protected displayEffects(effects: Effect[], callback: () => void, context?: unknown): void {
+  protected displayEffects(effects: EffectUnion[], callback: () => void, context?: unknown): void {
     let count = 0;
 
-    const onEffectComplete = (): void => {
+    const onEffectComplete = (e?: EffectUnion): void => {
       if (++count >= effects.length) {
         callback.call(context || this);
       }
@@ -194,17 +215,17 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
       const effect = schedule.shift();
 
       if (!Array.isArray(effect)) {
-        return effect.run(() => {
-          onEffectComplete();
+        return effect.run((e: EffectUnion) => {
+          onEffectComplete(e);
           display(schedule);
         }, this);
       }
 
-      const concurrent = effect as Effect[];
+      const concurrent = effect as EffectUnion[];
       let concurrentCount = 0;
 
-      function onConcurrentEffectComplete(): void {
-        onEffectComplete();
+      function onConcurrentEffectComplete(e?: EffectUnion): void {
+        onEffectComplete(e);
 
         if (++concurrentCount >= concurrent.length) {
           display(schedule);

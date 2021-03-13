@@ -1,9 +1,15 @@
-import { Action, ActionPayload } from '../actions';
+import { ActionUnion } from '../actions';
+import { EffectUnion } from '../effects';
+import { Level } from '../level';
+import { Scheduler } from '../scheduler';
 
-import { RuleApplicator } from './rule-applicator';
-import { RuleValidator } from './rule-validator';
+export abstract class Rule<T extends ActionUnion = ActionUnion> {
+  public constructor(
+    protected readonly level: Level,
+    protected readonly scheduler: Scheduler,
+    protected readonly rng: Phaser.Math.RandomDataGenerator,
+    protected readonly action: T
+  ) {}
 
-export interface Rule<T extends Action = Action, U extends ActionPayload = T['payload']> {
-  validate: RuleValidator<U>;
-  apply: RuleApplicator<U>;
+  public abstract validate(): ((skipEffects?: boolean) => EffectUnion[]) | false;
 }

@@ -56,7 +56,7 @@ export class World {
     this.levels = levels;
     this.scheduler = scheduler;
 
-    //this.scheduler.onTick(this.onTick, this);
+    this.scheduler.onTick(this.onTick, this);
   }
 
   /**
@@ -90,5 +90,7 @@ export class World {
     });
   }
 
-  //protected onTick(time: number): void {}
+  protected onTick(time: number): void {
+    console.log(`Time elapsed: ${time}`);
+  }
 }
