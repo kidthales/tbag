@@ -179,7 +179,8 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
 
     level.rngState = rng.state();
     level.schedulerState = scheduler.state;
-    // TODO: Save game...
+
+    this.world.save();
   }
 
   protected beginAvatarTurn(effects: EffectUnion[]): void {

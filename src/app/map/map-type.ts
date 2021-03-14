@@ -1,3 +1,3 @@
 export enum MapType {
-  Town
+  Town = 'Town'
 }

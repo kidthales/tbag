@@ -1,4 +1,5 @@
 export enum InputName {
+  TriggerGameOver = 'Trigger Game Over',
   MoveOrDefaultActionNorth = 'Move Or Default Action: North',
   MoveOrDefaultActionNortheast = 'Move Or Default Action: Northeast',
   MoveOrDefaultActionEast = 'Move Or Default Action: East',

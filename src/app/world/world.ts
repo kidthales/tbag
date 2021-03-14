@@ -3,6 +3,7 @@ import { EntityStaticDataManager } from '../entities';
 import { LevelData, LevelScene, LevelType } from '../level';
 import { Font, GlyphTileset } from '../plugins/glyph';
 import { LocalStorageScene } from '../plugins/local-storage';
+import { SaveManager } from '../save';
 import { Scheduler } from '../scheduler';
 
 import { WorldData } from './world-data';
@@ -47,6 +48,16 @@ export class World {
   protected readonly worldFont: Font;
 
   /**
+   * Save manager.
+   */
+  protected readonly saveManager: SaveManager;
+
+  /**
+   * Current level.
+   */
+  public currentLevel: string;
+
+  /**
    * Instantiate world.
    *
    * @param scene Host scene.
@@ -54,16 +65,18 @@ export class World {
    */
   public constructor(
     protected readonly scene: LocalStorageScene,
-    { font, glyphsets, entityStaticDataManager, worldViewport, avatar, levels, scheduler }: WorldData
+    { font, glyphsets, entityStaticDataManager, worldViewport, avatar, currentLevel, levels, scheduler }: WorldData
   ) {
     this.worldFont = font;
     this.glyphsets = glyphsets;
     this.entityStaticDataManager = entityStaticDataManager;
     this.worldViewport = worldViewport;
     this.avatar = avatar;
+    this.currentLevel = currentLevel;
     this.levels = levels;
     this.scheduler = scheduler;
 
+    this.saveManager = new SaveManager(scene.ls);
     this.scheduler.onTick(this.onTick, this);
   }
 
@@ -77,25 +90,35 @@ export class World {
   /**
    * TODO: Replace this nonsense...
    */
-  public run(): void {
-    this.levels.set(
-      'town',
-      new LevelData({
-        type: LevelType.Town,
-        seed: Date.now().toString(),
-        entityStaticDataManager: this.entityStaticDataManager
-      })
-    );
+  public run(fromSave?: boolean): void {
+    if (!fromSave) {
+      this.levels.set(
+        'town',
+        new LevelData({
+          type: LevelType.Town,
+          seed: Date.now().toString(),
+          persist: true,
+          entityStaticDataManager: this.entityStaticDataManager
+        })
+      );
 
-    const levelScene = new LevelScene('town', this);
+      this.currentLevel = 'town';
+    }
+
+    const levelScene = new LevelScene(this.currentLevel, this);
 
     this.scene.scene.add(levelScene.id, levelScene, false, {});
+
     this.scene.scene.launch(levelScene.id, {
       avatar: this.avatar,
       levelViewport: this.worldViewport,
-      populate: true,
-      fromSave: false
+      populate: !fromSave,
+      fromSave
     });
+  }
+
+  public save(): void {
+    this.saveManager.save(this);
   }
 
   protected onTick(time: number): void {

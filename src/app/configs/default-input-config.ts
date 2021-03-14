@@ -1,6 +1,7 @@
 import { InputConfig, InputName } from '../input';
 
 export const defaultInputConfig: InputConfig[] = [
+  { name: InputName.TriggerGameOver, key: { name: 'K', altKey: true, ctrlKey: true, shiftKey: true } },
   { name: InputName.MoveOrDefaultActionNorth, key: { name: 'UP', emitOnRepeat: true } },
   { name: InputName.MoveOrDefaultActionNorth, key: { name: 'W', emitOnRepeat: true } },
   { name: InputName.MoveOrDefaultActionNortheast, key: { name: 'PAGE_UP', emitOnRepeat: true } },

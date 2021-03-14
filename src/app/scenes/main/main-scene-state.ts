@@ -1,6 +1,6 @@
 export enum MainSceneState {
-  LoadFromSave,
-  NewGame,
-  InWorld,
-  GameOver
+  LoadFromSave = 'Load From Save',
+  NewGame = 'New Game',
+  InWorld = 'In World',
+  GameOver = 'Game Over'
 }

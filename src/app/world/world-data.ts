@@ -41,6 +41,11 @@ export class WorldData {
   public readonly avatar: AvatarEntity;
 
   /**
+   * Current level.
+   */
+  public readonly currentLevel: string;
+
+  /**
    * Level data mappings.
    */
   public readonly levels: Map<string, LevelData>;
@@ -62,8 +67,8 @@ export class WorldData {
     worldViewport,
     avatarData,
     avatarStaticDataId,
-    levels,
-    schedulerState
+    currentLevel,
+    levels
   }: WorldDataConfig) {
     this.font = Font.normalize(font || WorldData.defaultFont);
 
@@ -85,6 +90,7 @@ export class WorldData {
       Object.entries(levels || {}).map(([id, config]) => [id, new LevelData({ ...config, entityStaticDataManager })])
     );
 
-    this.scheduler = new Scheduler(schedulerState);
+    this.currentLevel = currentLevel;
+    this.scheduler = new Scheduler(this.levels.get(currentLevel)?.schedulerState);
   }
 }

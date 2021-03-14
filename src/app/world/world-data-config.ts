@@ -2,7 +2,6 @@ import { AvatarData } from '../avatar';
 import { EntityStaticDataManager } from '../entities';
 import { LevelDataConfig } from '../level';
 import { FontLike, GlyphVector } from '../plugins/glyph';
-import { SchedulerState } from '../scheduler';
 
 /**
  * World data configuration.
@@ -36,12 +35,12 @@ export interface WorldDataConfig {
   /**
    * Avatar data.
    */
-  avatarData: AvatarData;
+  avatarData?: AvatarData;
 
   /**
    * Avatar static data ID.
    */
-  avatarStaticDataId: number;
+  avatarStaticDataId?: number;
 
   /**
    * Font configuration for glyphs.
@@ -49,12 +48,12 @@ export interface WorldDataConfig {
   font?: FontLike;
 
   /**
+   * Current persisted level.
+   */
+  currentLevel?: string;
+
+  /**
    * Persisted level states.
    */
   levels?: Record<string, LevelDataConfig>;
-
-  /**
-   * Persisted world scheduler state.
-   */
-  schedulerState?: SchedulerState;
 }

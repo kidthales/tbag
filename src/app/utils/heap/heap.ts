@@ -1,3 +1,5 @@
+import { JSONObject } from '../json';
+
 import { HeapNode } from './heap-node';
 import { HeapNodeComparator } from './heap-node-comparator';
 import { HeapState } from './heap-state';
@@ -27,8 +29,8 @@ export class Heap<T = unknown, U = number, V extends HeapNode<T, U> = HeapNode<T
     return this.nodes.length;
   }
 
-  public get state(): HeapState<T, U, V> {
-    return { nodes: this.nodes.map((node) => ({ ...node })) };
+  public get state(): HeapState<T, U, V & JSONObject> {
+    return { nodes: this.nodes.map((node) => ({ ...node } as V & JSONObject)) };
   }
 
   public push(node: V): this {

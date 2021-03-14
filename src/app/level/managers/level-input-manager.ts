@@ -12,6 +12,7 @@ export class LevelInputManager {
   public allowInput = false;
 
   protected inputMap: Record<InputName, () => void> = {
+    [InputName.TriggerGameOver]: () => this.onTriggerGameOver(),
     [InputName.MoveOrDefaultActionNorth]: () => this.onMoveOrDefaultActionNorth(),
     [InputName.MoveOrDefaultActionNortheast]: () => this.onMoveOrDefaultActionNortheast(),
     [InputName.MoveOrDefaultActionEast]: () => this.onMoveOrDefaultActionEast(),
@@ -59,6 +60,12 @@ export class LevelInputManager {
         this
       );
     });
+  }
+
+  protected onTriggerGameOver(): void {
+    // TODO
+    this.allowInput = true;
+    console.log('Trigger game over');
   }
 
   protected onMoveOrDefaultActionNorth(): void {

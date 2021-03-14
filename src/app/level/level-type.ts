@@ -1,3 +1,3 @@
 export enum LevelType {
-  Town
+  Town = 'Town'
 }
