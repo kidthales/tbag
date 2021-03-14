@@ -12,8 +12,10 @@ import {
 } from '../entities';
 import { MapCell } from '../map';
 import { GlyphTile } from '../plugins/glyph';
+import { Heap } from '../utils';
 
 import { Level } from './level';
+import { LevelCellEntityVisibilityPriority } from './level-cell-entity-visibility-priority';
 
 export class LevelCell {
   public constructor(
@@ -259,46 +261,58 @@ export class LevelCell {
       return this;
     }
 
+    const heap = new Heap<EntityUnion, LevelCellEntityVisibilityPriority>();
+    this.entities.forEach((entity) =>
+      heap.push({ data: entity, metric: LevelCellEntityVisibilityPriority[entity.type] })
+    );
+
     let creatureExists = false;
     let itemExists = false;
 
-    this.entities
-      .sort((a, b) => b.type - a.type)
-      .forEach((entity) => {
-        const gameobject = (entity.gameobject as unknown) as Phaser.GameObjects.Components.Visible;
+    while (heap.size) {
+      const { data: entity } = heap.pop();
 
-        if (!gameobject) {
-          return;
-        }
+      const gameobject = (entity.gameobject as unknown) as Phaser.GameObjects.Components.Visible;
 
-        switch (entity.type) {
-          case EntityType.Creature:
+      if (!gameobject) {
+        continue;
+      }
+
+      switch (entity.type) {
+        case EntityType.Creature:
+          creatureExists = true;
+
+          gameobject.visible = true;
+          this.tile.visible = false;
+
+          break;
+        case EntityType.Item:
+          if (!creatureExists && !itemExists) {
+            itemExists = true;
+
             gameobject.visible = true;
             this.tile.visible = false;
-            creatureExists = true;
-            return;
-          case EntityType.Item:
-            if (!creatureExists && !itemExists) {
-              gameobject.visible = true;
-              this.tile.visible = false;
-              itemExists = true;
-            } else {
-              gameobject.visible = false;
-            }
-            return;
-          case EntityType.Terrain:
-            if (!creatureExists && !itemExists) {
-              gameobject.visible = true;
-              this.tile.visible = false;
-            } else {
-              gameobject.visible = false;
-            }
-            return;
-          case EntityType.Ephemeral:
-          default:
-            return;
-        }
-      });
+          } else {
+            gameobject.visible = false;
+          }
+
+          break;
+        case EntityType.Terrain:
+          if (!creatureExists && !itemExists) {
+            gameobject.visible = true;
+            this.tile.visible = false;
+          } else {
+            gameobject.visible = false;
+          }
+
+          break;
+        case EntityType.Ephemeral:
+        default:
+          break;
+      }
+    }
+
+    return this;
   }
 
   protected normalizeEntity(entity: string | EntityUnion): EntityUnion {

@@ -1,6 +1,6 @@
 export enum EntityType {
-  Terrain,
-  Item,
-  Creature,
-  Ephemeral
+  Terrain = 'Terrain',
+  Item = 'Item',
+  Creature = 'Creature',
+  Ephemeral = 'Ephemeral'
 }
