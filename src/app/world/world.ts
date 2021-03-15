@@ -3,7 +3,7 @@ import { EntityStaticDataManager } from '../entities';
 import { LevelData, LevelScene, LevelType } from '../level';
 import { Font, GlyphTileset } from '../plugins/glyph';
 import { LocalStorageScene } from '../plugins/local-storage';
-import { SaveManager } from '../save';
+import { Save } from '../save';
 import { Scheduler } from '../scheduler';
 
 import { WorldData } from './world-data';
@@ -48,9 +48,9 @@ export class World {
   protected readonly worldFont: Font;
 
   /**
-   * Save manager.
+   * Save accessor.
    */
-  protected readonly saveManager: SaveManager;
+  protected readonly saveAccessor: Save;
 
   /**
    * Current level.
@@ -76,7 +76,7 @@ export class World {
     this.levels = levels;
     this.scheduler = scheduler;
 
-    this.saveManager = new SaveManager(scene.ls);
+    this.saveAccessor = new Save(scene.ls);
     this.scheduler.onTick(this.onTick, this);
   }
 
@@ -87,9 +87,6 @@ export class World {
     return Font.clone(this.worldFont);
   }
 
-  /**
-   * TODO: Replace this nonsense...
-   */
   public run(fromSave?: boolean): void {
     if (!fromSave) {
       this.levels.set(
@@ -118,7 +115,7 @@ export class World {
   }
 
   public save(): void {
-    this.saveManager.save(this);
+    this.saveAccessor.saveWorld(this);
   }
 
   protected onTick(time: number): void {

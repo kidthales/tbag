@@ -1,7 +1,7 @@
-import { avatarConfig, entityStaticDataIdConfig, layoutConfig } from '../../configs';
+import { avatarConfig, entityStaticDataIdConfig, layoutConfig, saveConfig } from '../../configs';
 import { EntityStaticDataManager, renderableComponentKey } from '../../entities';
 import { LocalStoragePlugin, LocalStorageScene } from '../../plugins/local-storage';
-import { SaveManager } from '../../save';
+import { Save } from '../../save';
 import { World, WorldData, WorldDataConfig } from '../../world';
 
 import { MainSceneState } from './main-scene-state';
@@ -13,7 +13,7 @@ export class MainScene extends Phaser.Scene implements LocalStorageScene {
 
   protected state: MainSceneState;
 
-  protected saveManager: SaveManager;
+  protected save: Save;
 
   protected hudGroup: Phaser.GameObjects.Group;
 
@@ -24,7 +24,7 @@ export class MainScene extends Phaser.Scene implements LocalStorageScene {
   }
 
   public init(): void {
-    this.saveManager = new SaveManager(this.ls);
+    this.save = new Save(this.ls).applyTransforms(saveConfig.transforms);
 
     this.events.on(MainSceneState.LoadFromSave, () => this.onLoadFromSave(), this);
     this.events.on(MainSceneState.NewGame, () => this.onNewGame(), this);
@@ -56,19 +56,18 @@ export class MainScene extends Phaser.Scene implements LocalStorageScene {
   }
 
   protected onLoadFromSave(): void {
-    const save = this.saveManager.load();
+    const savedWorldDataConfig = this.save.loadWorld();
 
-    if (!save.avatar || !save.currentLevel) {
-      this.saveManager.clear();
+    if (!savedWorldDataConfig.currentLevel) {
+      this.save.clear();
       this.transition(MainSceneState.NewGame);
     } else {
-      this.worldDataConfig.avatarStaticDataId = save.avatar.staticDataId;
-      this.worldDataConfig.avatarData = save.avatar.data;
-
-      this.worldDataConfig.currentLevel = save.currentLevel;
-
+      this.worldDataConfig.avatarStaticDataId = savedWorldDataConfig.avatarStaticDataId;
+      this.worldDataConfig.avatarData = savedWorldDataConfig.avatarData;
+      this.worldDataConfig.currentLevel = savedWorldDataConfig.currentLevel;
       this.worldDataConfig.levels = {};
-      Object.entries(save.levels || {}).forEach(
+
+      Object.entries(savedWorldDataConfig.levels || {}).forEach(
         ([id, level]) =>
           (this.worldDataConfig.levels[id] = {
             ...level,
