@@ -1,11 +1,17 @@
-import { generateTown } from './generators';
-import { MapDataUnion } from './map-data-union';
-import { MapType } from './map-type';
+import { LevelType } from '../level';
 
-export function generateMapData(type: MapType, seed: string | string[]): MapDataUnion {
+import { MapDataGenerator, TownMapDataGenerator } from './generators';
+import { MapDataUnion } from './map-data-union';
+
+export function generateMapData(type: LevelType, seed: string[]): MapDataUnion {
+  let generator: MapDataGenerator;
+
   switch (type) {
-    case MapType.Town:
+    case LevelType.Town:
     default:
-      return generateTown(seed);
+      generator = new TownMapDataGenerator(seed);
+      break;
   }
+
+  return generator.generate() as MapDataUnion;
 }

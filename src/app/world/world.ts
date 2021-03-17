@@ -89,11 +89,15 @@ export class World {
 
   public run(fromSave?: boolean): void {
     if (!fromSave) {
+      const s0 = Date.now();
+      const s1 = s0 * Math.random();
+      const s2 = s0 * Math.random();
+
       this.levels.set(
         'town',
         new LevelData({
           type: LevelType.Town,
-          seed: Date.now().toString(),
+          seed: [s0, s1, s2].map((s) => s.toString()),
           persist: true,
           entityStaticDataManager: this.entityStaticDataManager
         })

@@ -5,7 +5,7 @@ import { JSONObject } from '../../utils';
 
 export interface LevelSaveEntryValue extends JSONObject {
   type: LevelType;
-  seed: string | string[];
+  seed: string[];
   rngState: string;
   persist: boolean;
   entityManagerState: EntityManagerState;

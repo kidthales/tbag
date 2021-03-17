@@ -7,7 +7,7 @@ import { LevelType } from './level-type';
 
 export interface LevelDataConfig {
   type: LevelType;
-  seed: string | string[];
+  seed: string[];
   entityStaticDataManager: EntityStaticDataManager;
   persist?: boolean;
   rngState?: string;

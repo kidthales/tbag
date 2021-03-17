@@ -1,2 +1,2 @@
-export { generateTown } from './generate-town';
-export { TownMapData } from './town-map-data';
+export * from './town-map-data';
+export * from './town-map-data-generator';

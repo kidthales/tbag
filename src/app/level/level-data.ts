@@ -9,7 +9,7 @@ import { LevelType } from './level-type';
 export class LevelData {
   public readonly type: LevelType;
 
-  public readonly seed: string | string[];
+  public readonly seed: string[];
 
   public readonly persist: boolean;
 

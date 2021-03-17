@@ -1,9 +1,10 @@
+import { LevelType } from '../level';
+
 import { MapCell } from './map-cell';
 import { MapFeatures } from './map-features';
-import { MapType } from './map-type';
 
-export abstract class MapData<T, V extends MapFeatures = MapFeatures> {
-  public abstract readonly type: MapType;
+export abstract class MapData<T = unknown, V extends MapFeatures = MapFeatures> {
+  public abstract readonly type: LevelType;
 
   protected cells: T;
 

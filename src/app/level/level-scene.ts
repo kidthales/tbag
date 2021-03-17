@@ -77,7 +77,7 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
     const levelData = world.levels.get(this.id);
 
     levelData.levelScene = this;
-    levelData.mapData = generateMapData(levelData.type as any, levelData.seed);
+    levelData.mapData = generateMapData(levelData.type, levelData.seed);
 
     const rng = new Phaser.Math.RandomDataGenerator(levelData.seed);
 

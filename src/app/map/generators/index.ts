@@ -1,1 +1,2 @@
-export { generateTown, TownMapData } from './town';
+export * from './map-data-generator';
+export * from './town';
