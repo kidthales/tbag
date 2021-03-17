@@ -1,5 +1,6 @@
 import { MoveAction, MoveActionDirection } from '../../actions';
 import { defaultInputConfig } from '../../configs';
+import { ConfirmGameOverPopup } from '../../dom';
 import { EffectUnion } from '../../effects';
 import { PositionComponentData, positionComponentKey } from '../../entities';
 import { InputName } from '../../input';
@@ -63,9 +64,22 @@ export class LevelInputManager {
   }
 
   protected onTriggerGameOver(): void {
-    // TODO
-    this.allowInput = true;
-    console.log('Trigger game over');
+    const { centerX, centerY } = this.level.levelScene.levelCamera;
+    const popup = new ConfirmGameOverPopup(
+      this.level.levelScene,
+      centerX,
+      centerY,
+      () => {
+        console.log('ok');
+        popup.destroy();
+        this.allowInput = true;
+      },
+      () => {
+        console.log('cancel');
+        popup.destroy();
+        this.allowInput = true;
+      }
+    );
   }
 
   protected onMoveOrDefaultActionNorth(): void {

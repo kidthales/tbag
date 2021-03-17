@@ -43,7 +43,7 @@ export class Save {
   }
 
   public loadWorld(): Partial<WorldDataConfig> {
-    const avatar = this.loadAvatar();
+    const avatar = this.loadAvatar() || {};
     const currentLevel = this.loadCurrentLevel();
     const levels = this.loadLevels();
 
