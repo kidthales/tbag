@@ -31,7 +31,7 @@ export class ConfirmGameOverPopup extends CardDomWidget {
 
   protected getStyle(): Record<string, Record<string, string>> {
     return {
-      '.widget-content-container': {
+      [`.${ConfirmGameOverPopup.widgetContentContainerClassName}`]: {
         background: '#fff'
       }
     };

@@ -4,6 +4,8 @@ import { LocalStoragePlugin, LocalStorageScene } from '../../plugins/local-stora
 import { Save } from '../../save';
 import { World, WorldData, WorldDataConfig } from '../../world';
 
+import { TitleScene } from '../title-scene';
+
 import { MainSceneState } from './main-scene-state';
 
 export class MainScene extends Phaser.Scene implements LocalStorageScene {
@@ -47,6 +49,7 @@ export class MainScene extends Phaser.Scene implements LocalStorageScene {
 
   public create(): void {
     this.transition(MainSceneState.LoadFromSave);
+    this.events.on('Trigger Game Over', () => this.transition(MainSceneState.GameOver), this);
   }
 
   protected transition(state: MainSceneState): void {
@@ -92,5 +95,8 @@ export class MainScene extends Phaser.Scene implements LocalStorageScene {
     world.run(fromSave);
   }
 
-  protected onGameOver(): void {}
+  protected onGameOver(): void {
+    this.events.removeAllListeners();
+    this.scene.transition({ target: TitleScene.key, sleep: false });
+  }
 }

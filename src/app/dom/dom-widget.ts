@@ -9,6 +9,10 @@ export abstract class DomWidget
     Phaser.GameObjects.Components.ScrollFactor,
     Phaser.GameObjects.Components.Transform,
     Phaser.GameObjects.Components.Visible {
+  protected static readonly widgetContentContainerClassName = 'widget-content-container';
+
+  private static readonly widgetContentContainerDimensionsClassName = 'widget-content-container-dimensions';
+
   public readonly id = `widget-${Phaser.Math.RND.uuid()}`;
 
   public handlingInput = false;
@@ -335,19 +339,6 @@ export abstract class DomWidget
 
   protected abstract registerInputHandling(): void;
 
-  protected getHtml(): string {
-    return `
-      <style>
-        ${this.getCss()}
-        #${this.id}.widget-content-container-dimensions { ${this.getDimensionsCss()} }
-      </style>
-
-      <div id="${this.id}" class="widget-content-container widget-content-container-dimensions">
-        ${this.getContent()}
-      </div>
-    `;
-  }
-
   protected refresh(): this {
     this.gameobject.setElement(this.gameobject.node, this.getDimensionsCss());
     this.gameobject.node.innerHTML = this.getHtml();
@@ -358,19 +349,36 @@ export abstract class DomWidget
     return this;
   }
 
-  protected getCss(): string {
+  private getHtml(): string {
+    return `
+      <style>
+        ${this.getCss()}
+        #${this.id}.${DomWidget.widgetContentContainerDimensionsClassName} { ${this.getDimensionsCss()} }
+      </style>
+
+      <div id="${this.id}" class="${DomWidget.widgetContentContainerClassName} ${
+      DomWidget.widgetContentContainerDimensionsClassName
+    }">
+        ${this.getContent()}
+      </div>
+    `;
+  }
+
+  private getCss(): string {
     return Object.entries(this.getStyle())
       .map(
         ([selector, declaration]) =>
-          `#${this.id}${selector === '.widget-content-container' ? '' : ' '}${selector} { ${Object.entries(declaration)
+          `#${this.id}${
+            selector === `.${DomWidget.widgetContentContainerClassName}` ? '' : ' '
+          }${selector} { ${Object.entries(declaration)
             .map(([key, value]) => `${key}: ${value};`)
             .join(' ')} }`
       )
       .join('\n');
   }
 
-  protected getDimensionsCss(): string {
+  private getDimensionsCss(): string {
     const { widgetWidth: width, widgetHeight: height } = this;
-    return `width: ${width}px; height: ${height}px; max-width: ${width}px; max-height: ${height}px;`;
+    return `width: ${width}px; height: ${height}px; max-width: ${width}px; max-height: ${height}px; min-width: ${width}px; min-height: ${height}px;`;
   }
 }

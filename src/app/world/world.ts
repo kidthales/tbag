@@ -118,6 +118,18 @@ export class World {
     this.saveAccessor.saveWorld(this);
   }
 
+  public gameOver(): void {
+    for (let id of this.levels.keys()) {
+      this.scene.scene.remove(id);
+    }
+
+    this.levels.clear();
+    this.scheduler.clear();
+    this.saveAccessor.clear();
+
+    this.scene.events.emit('Trigger Game Over');
+  }
+
   protected onTick(time: number): void {
     console.log(`Time elapsed: ${time}`);
   }

@@ -70,12 +70,10 @@ export class LevelInputManager {
       centerX,
       centerY,
       () => {
-        console.log('ok');
         popup.destroy();
-        this.allowInput = true;
+        this.level.world.gameOver();
       },
       () => {
-        console.log('cancel');
         popup.destroy();
         this.allowInput = true;
       }
