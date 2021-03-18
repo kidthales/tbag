@@ -1,4 +1,5 @@
 import { avatarConfig, entityStaticDataIdConfig, layoutConfig, saveConfig } from '../../configs';
+import { MessageHud, StatusHud } from '../../dom';
 import { EntityStaticDataManager, renderableComponentKey } from '../../entities';
 import { LocalStoragePlugin, LocalStorageScene } from '../../plugins/local-storage';
 import { Save } from '../../save';
@@ -30,7 +31,6 @@ export class MainScene extends Phaser.Scene implements LocalStorageScene {
   }
 
   public create(): void {
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.onShutdown, this);
     this.transition(MainSceneState.LoadFromSave);
   }
 
@@ -62,9 +62,14 @@ export class MainScene extends Phaser.Scene implements LocalStorageScene {
 
   protected initHud(): this {
     this.hudGroup = this.add.group();
-    //this.hudGroup.add(this.add.graphics({ x: 0, y: 0 }).fillStyle(0x0000ff).fillRect(0, 0, 100, 900));
-    //this.hudGroup.add(this.add.graphics({ x: 1350, y: 0 }).fillStyle(0xff0000).fillRect(0, 0, 250, 900));
-    //this.hudGroup.add(this.add.graphics({ x: 100, y: 700 }).fillStyle(0x00ff00).fillRect(0, 0, 1250, 200));
+
+    const { bottomHud, leftHud } = layoutConfig.mainScene.inWorld;
+
+    this.hudGroup.add(new MessageHud(this, bottomHud.x, bottomHud.y, bottomHud.width, bottomHud.height).setOrigin(0));
+    this.hudGroup.add(new StatusHud(this, leftHud.x, leftHud.y, leftHud.width, leftHud.height).setOrigin(0));
+
+    this.hudGroup.setVisible(false);
+
     return this;
   }
 
@@ -107,6 +112,8 @@ export class MainScene extends Phaser.Scene implements LocalStorageScene {
   }
 
   protected onInWorld(prevState: MainSceneState): void {
+    this.hudGroup.setVisible(true);
+
     const fromSave = prevState === MainSceneState.LoadFromSave;
     const world = new World(this, (reason) => this.onWorldExit(reason), new WorldData(this.worldDataConfig));
     world.run(fromSave);
@@ -119,20 +126,16 @@ export class MainScene extends Phaser.Scene implements LocalStorageScene {
         break;
       case WorldExitReason.None:
       default:
-        this.transitionToTitleScene();
+        this.reloadPage();
         break;
     }
   }
 
   protected onGameOver(): void {
-    this.transitionToTitleScene();
+    this.reloadPage();
   }
 
-  protected onShutdown(): void {
-    this.events.removeAllListeners();
-  }
-
-  protected transitionToTitleScene(): void {
-    this.scene.transition({ target: TitleScene.key, sleep: false });
+  protected reloadPage(): void {
+    window.location.reload();
   }
 }

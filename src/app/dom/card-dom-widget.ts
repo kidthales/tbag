@@ -1,4 +1,4 @@
-import { DomWidget } from '../dom-widget';
+import { DomWidget } from './dom-widget';
 
 import { CardDomWidgetActionConfig } from './card-dom-widget-action-config';
 
@@ -49,7 +49,7 @@ export abstract class CardDomWidget extends DomWidget {
   }
 
   protected registerInputHandling(): void {
-    this.gameobject.addListener('click').on(
+    this.addListener('click').on(
       'click',
       (event: Event) => {
         const config = this.cardActions[event.target['name']];

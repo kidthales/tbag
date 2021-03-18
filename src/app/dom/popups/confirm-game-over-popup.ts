@@ -1,4 +1,5 @@
-import { CardDomWidget, CardDomWidgetActionConfig } from '../card';
+import { CardDomWidget } from '../card-dom-widget';
+import { CardDomWidgetActionConfig } from '../card-dom-widget-action-config';
 
 export class ConfirmGameOverPopup extends CardDomWidget {
   protected cardTitle = '<h3>Confirm Game Over?</h3>';

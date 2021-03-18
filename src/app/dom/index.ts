@@ -1,1 +1,2 @@
-export { ConfirmGameOverPopup } from './popup';
+export * from './hud';
+export * from './popups';
