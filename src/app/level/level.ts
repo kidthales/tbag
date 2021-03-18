@@ -59,6 +59,10 @@ export class Level {
     return this.levelData.seed;
   }
 
+  public get persist(): boolean {
+    return this.levelData.persist;
+  }
+
   public get width(): number {
     return this.levelData.mapData.width;
   }

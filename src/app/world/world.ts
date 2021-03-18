@@ -1,12 +1,14 @@
 import { AvatarEntity } from '../avatar';
+import { worldConfig } from '../configs';
 import { EntityStaticDataManager } from '../entities';
-import { LevelData, LevelScene, LevelType } from '../level';
+import { LevelData, LevelScene, LevelSceneLaunchData } from '../level';
 import { Font, GlyphTileset } from '../plugins/glyph';
 import { LocalStorageScene } from '../plugins/local-storage';
 import { Save } from '../save';
 import { Scheduler } from '../scheduler';
 
 import { WorldData } from './world-data';
+import { WorldExitReason } from './world-exit-reason';
 
 /**
  * World.
@@ -65,6 +67,7 @@ export class World {
    */
   public constructor(
     protected readonly scene: LocalStorageScene,
+    protected readonly onWorldExit: (reason: WorldExitReason) => void,
     { font, glyphsets, entityStaticDataManager, worldViewport, avatar, currentLevel, levels, scheduler }: WorldData
   ) {
     this.worldFont = font;
@@ -89,28 +92,13 @@ export class World {
 
   public run(fromSave?: boolean): void {
     if (!fromSave) {
-      const s0 = Date.now();
-      const s1 = s0 * Math.random();
-      const s2 = s0 * Math.random();
-
-      this.levels.set(
-        'town',
-        new LevelData({
-          type: LevelType.Town,
-          seed: [s0, s1, s2].map((s) => s.toString()),
-          persist: true,
-          entityStaticDataManager: this.entityStaticDataManager
-        })
-      );
-
-      this.currentLevel = 'town';
+      this.generateLevelData(worldConfig.firstLevelId);
+      this.currentLevel = worldConfig.firstLevelId;
     }
 
-    const levelScene = new LevelScene(this.currentLevel, this);
+    this.generateLevelScene(this.currentLevel);
 
-    this.scene.scene.add(levelScene.id, levelScene, false, {});
-
-    this.scene.scene.launch(levelScene.id, {
+    this.scene.scene.launch(this.currentLevel, {
       avatar: this.avatar,
       levelViewport: this.worldViewport,
       populate: !fromSave,
@@ -128,13 +116,79 @@ export class World {
     }
 
     this.levels.clear();
-    this.scheduler.clear();
+    this.scheduler.reset(true);
     this.saveAccessor.clear();
 
-    this.scene.events.emit('Trigger Game Over');
+    this.onWorldExit(WorldExitReason.GameOver);
+  }
+
+  public transitionToLevel(id: string): void {
+    const { avatar, currentLevel, levels, scheduler, worldViewport: levelViewport } = this;
+
+    avatar.gameobject = undefined;
+
+    const launchData: LevelSceneLaunchData = { avatar, levelViewport };
+
+    if (!levels.has(id)) {
+      this.generateLevelData(id);
+      launchData.populate = true;
+    }
+
+    const targetLevelData = levels.get(id);
+
+    if (!targetLevelData.levelScene) {
+      this.generateLevelScene(id);
+    }
+
+    const currentLevelData = levels.get(currentLevel);
+
+    const { persist, levelScene } = currentLevelData;
+
+    if (persist) {
+      scheduler.remove(avatar.id);
+
+      currentLevelData.schedulerState = scheduler.state;
+      currentLevelData.rngState = levelScene.rng.state();
+
+      this.saveAccessor.saveLevel(currentLevel, currentLevelData);
+    }
+
+    scheduler.clear();
+    this.currentLevel = id;
+
+    levelScene.scene.transition({
+      target: id,
+      data: launchData,
+      duration: 1000,
+      sleep: false,
+      allowInput: false,
+      onUpdate: (progress: number) => levelScene.levelCamera.setAlpha(1 - progress),
+      onUpdateScope: this
+    });
   }
 
   protected onTick(time: number): void {
     console.log(`Time elapsed: ${time}`);
+  }
+
+  protected generateLevelData(id: string): void {
+    const config = worldConfig.levels[id];
+
+    const s0 = Date.now();
+    const s1 = s0 * Math.random();
+    const s2 = s0 * Math.random();
+
+    this.levels.set(
+      id,
+      new LevelData({
+        seed: [s0, s1, s2].map((s) => s.toString()),
+        entityStaticDataManager: this.entityStaticDataManager,
+        ...config
+      })
+    );
+  }
+
+  protected generateLevelScene(id: string): void {
+    this.scene.scene.add(id, new LevelScene(id, this), false, {});
   }
 }

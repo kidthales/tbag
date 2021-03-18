@@ -2,7 +2,7 @@ import { avatarConfig, entityStaticDataIdConfig, layoutConfig, saveConfig } from
 import { EntityStaticDataManager, renderableComponentKey } from '../../entities';
 import { LocalStoragePlugin, LocalStorageScene } from '../../plugins/local-storage';
 import { Save } from '../../save';
-import { World, WorldData, WorldDataConfig } from '../../world';
+import { World, WorldData, WorldDataConfig, WorldExitReason } from '../../world';
 
 import { TitleScene } from '../title-scene';
 
@@ -26,35 +26,52 @@ export class MainScene extends Phaser.Scene implements LocalStorageScene {
   }
 
   public init(): void {
+    this.initSave().initTransitionHandlers().initWorldDataConfig().initHud();
+  }
+
+  public create(): void {
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.onShutdown, this);
+    this.transition(MainSceneState.LoadFromSave);
+  }
+
+  protected initSave(): this {
     this.save = new Save(this.ls).applyTransforms(saveConfig.transforms);
+    return this;
+  }
 
-    this.events.on(MainSceneState.LoadFromSave, () => this.onLoadFromSave(), this);
-    this.events.on(MainSceneState.NewGame, () => this.onNewGame(), this);
-    this.events.on(MainSceneState.InWorld, (prevState: MainSceneState) => this.onInWorld(prevState), this);
-    this.events.on(MainSceneState.GameOver, () => this.onGameOver(), this);
+  protected initTransitionHandlers(): this {
+    this.events.once(MainSceneState.LoadFromSave, () => this.onLoadFromSave(), this);
+    this.events.once(MainSceneState.NewGame, () => this.onNewGame(), this);
+    this.events.once(MainSceneState.InWorld, (prevState: MainSceneState) => this.onInWorld(prevState), this);
+    this.events.once(MainSceneState.GameOver, () => this.onGameOver(), this);
+    return this;
+  }
 
-    this.hudGroup = this.add.group();
-    //this.hudGroup.add(this.add.graphics({ x: 0, y: 0 }).fillStyle(0x0000ff).fillRect(0, 0, 100, 900));
-    //this.hudGroup.add(this.add.graphics({ x: 1350, y: 0 }).fillStyle(0xff0000).fillRect(0, 0, 250, 900));
-    //this.hudGroup.add(this.add.graphics({ x: 100, y: 700 }).fillStyle(0x00ff00).fillRect(0, 0, 1250, 200));
-
+  protected initWorldDataConfig(): this {
     const jsonCache = this.cache.json;
+
     this.worldDataConfig = {
       worldViewport: layoutConfig.mainScene.inWorld.worldViewport,
       font: layoutConfig.mainScene.inWorld.font,
       glyphs: { default: jsonCache.get('glyphs') },
       entityStaticDataManager: new EntityStaticDataManager(jsonCache)
     };
+
+    return this;
   }
 
-  public create(): void {
-    this.transition(MainSceneState.LoadFromSave);
-    this.events.on('Trigger Game Over', () => this.transition(MainSceneState.GameOver), this);
+  protected initHud(): this {
+    this.hudGroup = this.add.group();
+    //this.hudGroup.add(this.add.graphics({ x: 0, y: 0 }).fillStyle(0x0000ff).fillRect(0, 0, 100, 900));
+    //this.hudGroup.add(this.add.graphics({ x: 1350, y: 0 }).fillStyle(0xff0000).fillRect(0, 0, 250, 900));
+    //this.hudGroup.add(this.add.graphics({ x: 100, y: 700 }).fillStyle(0x00ff00).fillRect(0, 0, 1250, 200));
+    return this;
   }
 
   protected transition(state: MainSceneState): void {
     const prevState = this.state;
     this.state = state;
+
     this.events.emit(state, prevState);
   }
 
@@ -91,12 +108,31 @@ export class MainScene extends Phaser.Scene implements LocalStorageScene {
 
   protected onInWorld(prevState: MainSceneState): void {
     const fromSave = prevState === MainSceneState.LoadFromSave;
-    const world = new World(this, new WorldData(this.worldDataConfig));
+    const world = new World(this, (reason) => this.onWorldExit(reason), new WorldData(this.worldDataConfig));
     world.run(fromSave);
   }
 
+  protected onWorldExit(reason: WorldExitReason): void {
+    switch (reason) {
+      case WorldExitReason.GameOver:
+        this.transition(MainSceneState.GameOver);
+        break;
+      case WorldExitReason.None:
+      default:
+        this.transitionToTitleScene();
+        break;
+    }
+  }
+
   protected onGameOver(): void {
+    this.transitionToTitleScene();
+  }
+
+  protected onShutdown(): void {
     this.events.removeAllListeners();
+  }
+
+  protected transitionToTitleScene(): void {
     this.scene.transition({ target: TitleScene.key, sleep: false });
   }
 }
