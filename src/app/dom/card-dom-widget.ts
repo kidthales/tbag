@@ -3,9 +3,9 @@ import { DomWidget } from './dom-widget';
 import { CardDomWidgetActionConfig } from './card-dom-widget-action-config';
 
 export abstract class CardDomWidget extends DomWidget {
-  protected abstract cardTitle;
+  protected abstract cardTitle: string;
 
-  protected abstract cardContent;
+  protected abstract cardContent: string;
 
   protected abstract cardActions: Record<string, CardDomWidgetActionConfig>;
 
