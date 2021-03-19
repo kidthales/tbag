@@ -5,9 +5,11 @@ import { EffectUnion } from '../../effects';
 import { PositionComponentData, positionComponentKey } from '../../entities';
 import { InputName } from '../../input';
 import { Direction, translate } from '../../map';
+import { GlyphTilemapLayer } from '../../plugins/glyph';
 import { validate } from '../../rules';
 
 import { Level } from '../level';
+import { LevelCell } from '../level-cell';
 
 export class LevelInputManager {
   public allowInput = false;
@@ -60,6 +62,69 @@ export class LevelInputManager {
         },
         this
       );
+    });
+
+    scene.input.topOnly = false;
+
+    //scene.input.on(Phaser.Input.Events.GAMEOBJECT_DOWN, (pointer, gameObject) => console.log(pointer, gameObject));
+    //scene.input.on(Phaser.Input.Events.GAMEOBJECT_UP, (pointer, gameObject) => console.log(pointer, gameObject));
+
+    let currentMoveCell: LevelCell;
+    scene.input.on(Phaser.Input.Events.GAMEOBJECT_MOVE, (pointer, gameObject) => {
+      if (!this.allowInput) {
+        return;
+      }
+
+      if (gameObject instanceof GlyphTilemapLayer) {
+        this.allowInput = false;
+
+        const { worldX, worldY } = pointer;
+        const cell = level.getCellAtWorldXY(worldX, worldY);
+
+        if (currentMoveCell && currentMoveCell.x === cell.x && currentMoveCell.y === cell.y) {
+          this.allowInput = true;
+          return;
+        }
+
+        currentMoveCell = cell;
+
+        if (cell.blockMove) {
+          scene.pathTooltip.points = [];
+          this.allowInput = true;
+          return;
+        }
+
+        const { x, y } = scene.avatar.getComponent<PositionComponentData>(positionComponentKey);
+        const dx = cell.tile.width / 2;
+        const dy = cell.tile.height / 2;
+
+        const begin = new Phaser.Geom.Point(x, y);
+        const end = new Phaser.Geom.Point(cell.x, cell.y);
+
+        if (cell.creature) {
+          scene.pathTooltip.points = Phaser.Geom.Line.BresenhamPoints(
+            new Phaser.Geom.Line(begin.x, begin.y, end.x, end.y)
+          )
+            .map(({ x, y }) => level.getCell(x, y))
+            .map(({ worldX, worldY }) => new Phaser.Geom.Point(worldX + dx, worldY + dy));
+          scene.pathTooltip.pathStyle(5, 0xff0000);
+          this.allowInput = true;
+          return;
+        }
+
+        scene.pathTooltip.points = level
+          .getPath(begin, end)
+          .map(({ worldX, worldY }) => new Phaser.Geom.Point(worldX + dx, worldY + dy));
+        scene.pathTooltip.pathStyle(5, 0x00ff00);
+
+        this.allowInput = true;
+      }
+    });
+
+    scene.input.on(Phaser.Input.Events.GAMEOBJECT_OUT, (pointer, gameObject) => {
+      if (gameObject instanceof GlyphTilemapLayer) {
+        scene.pathTooltip.points = [];
+      }
     });
   }
 

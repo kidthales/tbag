@@ -1,6 +1,7 @@
 import { AvatarEntity } from '../avatar';
 import { EffectUnion, scheduleEffects, ScheduledEffects } from '../effects';
 import { PositionComponentData, positionComponentKey } from '../entities';
+import { PathTooltip } from '../graphics';
 import { generateMapData } from '../map';
 import {
   GlyphPlugin,
@@ -36,6 +37,8 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
 
   public rng: Phaser.Math.RandomDataGenerator;
 
+  public pathTooltip: PathTooltip;
+
   protected level: Level;
 
   protected simulation: Simulation;
@@ -55,7 +58,10 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
 
     const levelData = this.initLevelDataAndRng(populate && !fromSave);
 
-    this.initLevelAndSimulation(levelData, fromSave).initAvatar(avatar, fromSave).initCameras(levelViewport);
+    this.initLevelAndSimulation(levelData, fromSave)
+      .initAvatar(avatar, fromSave)
+      .initCameras(levelViewport)
+      .initGraphics();
   }
 
   public create(launchData: LevelSceneLaunchData): void {
@@ -141,6 +147,12 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
     this.level.ignoreCamera(this.cameras.main);
     this.level.setCameraBounds(this.levelCamera);
 
+    return this;
+  }
+
+  protected initGraphics(): this {
+    this.pathTooltip = new PathTooltip(this, { width: 5, color: 0x0000ff });
+    this.cameras.main.ignore(this.pathTooltip);
     return this;
   }
 

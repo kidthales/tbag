@@ -7,8 +7,11 @@ import {
   positionComponentKey,
   renderableComponentKey
 } from '../entities';
+import { CardinalDirection, IntercardinalDirection, translate } from '../map';
+import { PathFinder } from '../path';
 import { Glyph, GlyphTile, GlyphTilemap, GlyphTilemapComponents } from '../plugins/glyph';
 import { SchedulerState } from '../scheduler';
+import { enumValues } from '../utils';
 import { World } from '../world';
 
 import { LevelCell } from './level-cell';
@@ -17,38 +20,24 @@ import { LevelScene } from './level-scene';
 import { LevelType } from './level-type';
 
 export class Level {
+  public readonly events = new Phaser.Events.EventEmitter();
+
   protected readonly gameObjectGroup: Phaser.GameObjects.Group;
 
   protected readonly glyphmap: GlyphTilemap;
+
+  protected readonly pathFinder = new PathFinder();
 
   public constructor(protected readonly levelData: LevelData) {
     const { font, glyphsets } = this.world;
     const { width, height } = this.levelData.mapData;
 
-    this.gameObjectGroup = this.levelScene.add.group();
-
     this.glyphmap = this.levelScene.add.glyphmap(undefined, width, height, font);
-    this.gameObjectGroup.add(this.glyphmap.createBlankLayer('default', Array.from(glyphsets.values())));
+    this.gameObjectGroup = this.levelScene.add
+      .group()
+      .add(this.glyphmap.createBlankLayer('default', Array.from(glyphsets.values())).setInteractive());
 
-    this.entityManager.forEach((entity) => {
-      const position = entity.getComponent<PositionComponentData>(positionComponentKey);
-
-      if (!position) {
-        return;
-      }
-
-      const { x, y } = position;
-
-      this.getCell(x, y).addEntity(entity);
-    });
-
-    for (let y = 0; y < height; ++y) {
-      for (let x = 0; x < width; ++x) {
-        const cell = this.getCell(x, y);
-        cell.entities.forEach((entity) => this.allocateGameObject(entity));
-        cell.refresh();
-      }
-    }
+    this.initLevel(); //.initInputHandling();
   }
 
   public get type(): LevelType {
@@ -283,11 +272,62 @@ export class Level {
       glyphs.push(new Glyph('_', '#fff', undefined, this.levelScene.world.font));
     }
 
-    normalizedEntity.gameobject = this.levelScene.add.glyphSprite(renderCoordinates.x, renderCoordinates.y, glyphs);
+    normalizedEntity.gameobject = this.levelScene.add
+      .glyphSprite(renderCoordinates.x, renderCoordinates.y, glyphs)
+      .setInteractive();
 
     this.gameObjectGroup.add(normalizedEntity.gameobject);
 
     return normalizedEntity.gameobject;
+  }
+
+  public getPath(
+    begin: Phaser.Geom.Point,
+    end: Phaser.Geom.Point,
+    neighbors: (cell: LevelCell) => LevelCell[] = (cell) =>
+      [...enumValues(CardinalDirection), ...enumValues(IntercardinalDirection)]
+        .map((direction) => {
+          const [x, y] = translate(cell.x, cell.y, direction);
+
+          if (this.isInBounds(x, y)) {
+            const neighbor = this.getCell(x, y);
+
+            if (!neighbor.blockMove && !neighbor.creature) {
+              return neighbor;
+            }
+          }
+        })
+        .filter(Boolean)
+  ): LevelCell[] {
+    return this.pathFinder
+      .find(begin, end, ({ x, y }) => neighbors(this.getCell(x, y)).map(({ x, y }) => ({ x, y })))
+      .map(({ x, y }) => this.getCell(x, y));
+  }
+
+  protected initLevel(): this {
+    const { width, height } = this.levelData.mapData;
+
+    this.entityManager.forEach((entity) => {
+      const position = entity.getComponent<PositionComponentData>(positionComponentKey);
+
+      if (!position) {
+        return;
+      }
+
+      const { x, y } = position;
+
+      this.getCell(x, y).addEntity(entity);
+    });
+
+    for (let y = 0; y < height; ++y) {
+      for (let x = 0; x < width; ++x) {
+        const cell = this.getCell(x, y);
+        cell.entities.forEach((entity) => this.allocateGameObject(entity));
+        cell.refresh();
+      }
+    }
+
+    return this;
   }
 
   protected getCellFromTile(tile: GlyphTile): LevelCell {

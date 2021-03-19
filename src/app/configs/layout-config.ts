@@ -14,9 +14,9 @@ export const layoutConfig = {
     inWorld: {
       font: new Font(28, 'monospace'),
       leftHud: new Phaser.Geom.Rectangle(0, 0, 100, maxHeight),
-      worldViewport: new Phaser.Geom.Rectangle(110, 0, 1250, 700),
+      worldViewport: new Phaser.Geom.Rectangle(110, 10, 1250, 720),
       rightHud: new Phaser.Geom.Rectangle(1350, 0, 250, maxHeight),
-      bottomHud: new Phaser.Geom.Rectangle(100, 700, 1250, 200)
+      bottomHud: new Phaser.Geom.Rectangle(100, 720, 1250, 200)
     }
   }
 };
