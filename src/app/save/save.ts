@@ -75,7 +75,7 @@ export class Save {
   }
 
   public saveLevel(id: string, level: LevelData): this {
-    const { type, seed, persist, entityManager, rngState, schedulerState } = level;
+    const { type, seed, persist, entityManager, rngState, schedulerState, avatarExplored } = level;
     const entityManagerState = entityManager.state;
 
     const levelSaveEntry = this.getLevelSaveEntry(id);
@@ -86,7 +86,8 @@ export class Save {
       rngState,
       persist,
       entityManagerState,
-      schedulerState
+      schedulerState,
+      avatarExplored
     });
 
     return this;

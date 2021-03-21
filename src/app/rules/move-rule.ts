@@ -19,9 +19,9 @@ export class MoveRule extends Rule<MoveAction> {
     const { x: srcX, y: srcY } = position;
     const [dstX, dstY] = translate(srcX, srcY, direction);
 
-    const level = this.level;
-    const srcCell = level.getCell(srcX, srcY);
-    const dstCell = level.getCell(dstX, dstY);
+    const map = this.level.map;
+    const srcCell = map.getCell(srcX, srcY);
+    const dstCell = map.getCell(dstX, dstY);
 
     switch (actor.type) {
       case EntityType.Creature:

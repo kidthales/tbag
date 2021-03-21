@@ -17,6 +17,8 @@ export class LevelData {
 
   public readonly entityManager: EntityManager;
 
+  public readonly avatarExplored: true | Record<string, boolean>;
+
   public mapData: MapDataUnion;
 
   public rngState: string;
@@ -34,6 +36,7 @@ export class LevelData {
     entityManagerState,
     schedulerState,
     mapData,
+    avatarExplored,
     levelScene
   }: LevelDataConfig) {
     this.type = type;
@@ -48,5 +51,7 @@ export class LevelData {
 
     this.mapData = mapData || null;
     this.levelScene = levelScene || null;
+
+    this.avatarExplored = avatarExplored || {};
   }
 }

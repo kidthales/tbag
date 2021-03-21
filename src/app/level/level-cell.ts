@@ -27,11 +27,11 @@ export class LevelCell {
   ) {}
 
   public get worldX(): number {
-    return this.level.cellToWorldX(this.x);
+    return this.level.map.cellToWorldX(this.x);
   }
 
   public get worldY(): number {
-    return this.level.cellToWorldY(this.y);
+    return this.level.map.cellToWorldY(this.y);
   }
 
   public get terrainStaticData(): TerrainStaticData {
@@ -145,6 +145,38 @@ export class LevelCell {
     }
 
     return data.blockMove;
+  }
+
+  public get blockLight(): boolean {
+    const terrain = this.terrain;
+
+    if (terrain) {
+      if (terrain.hasComponent(levelCellComponentKey)) {
+        return terrain.getComponent<LevelCellComponentData>(levelCellComponentKey).blockLight;
+      }
+
+      const staticData = this.level.entityStaticDataManager;
+
+      if (terrain.hasStaticComponent(levelCellComponentKey, staticData)) {
+        return terrain.getStaticComponent<LevelCellComponentData>(levelCellComponentKey, staticData).blockLight;
+      }
+    }
+
+    const data = this.terrainStaticData[levelCellComponentKey];
+
+    if (!data) {
+      return true;
+    }
+
+    return data.blockLight;
+  }
+
+  public get exploredByAvatar(): boolean {
+    return this.level.avatarExplored === true || this.level.avatarExplored[`${this.x},${this.y}`];
+  }
+
+  public get visibleToAvatar(): boolean {
+    return this.level.visibility.isVisibleToAvatar(this.x, this.y);
   }
 
   public addEntity(entity: string | EntityUnion): boolean {
@@ -261,6 +293,10 @@ export class LevelCell {
       return this;
     }
 
+    return this.visibleToAvatar ? this.refreshVisibleToAvatar() : this.refreshNotVisibleToAvatar();
+  }
+
+  protected refreshVisibleToAvatar(): this {
     const heap = new Heap<EntityUnion, LevelCellEntityVisibilityPriority>();
     this.entities.forEach((entity) =>
       heap.push({ data: entity, metric: LevelCellEntityVisibilityPriority[entity.type] })
@@ -305,12 +341,47 @@ export class LevelCell {
             gameobject.visible = false;
           }
 
+          this.level.visibility.clearAvatarTerrainEntityMemory(entity.id);
           break;
         case EntityType.Ephemeral:
         default:
           break;
       }
     }
+
+    return this;
+  }
+
+  protected refreshNotVisibleToAvatar(): this {
+    this.entities.forEach((entity) => {
+      if (entity.gameobject) {
+        ((entity.gameobject as unknown) as Phaser.GameObjects.Components.Visible).visible = false;
+      }
+    });
+
+    if (!this.exploredByAvatar) {
+      return this;
+    }
+
+    const terrain = this.terrain;
+
+    if (terrain) {
+      this.level.visibility.setAvatarTerrainEntityMemory(terrain);
+      return this;
+    }
+
+    const renderable = this.terrainStaticData.renderable;
+
+    let index = -1;
+
+    if (Array.isArray(renderable) && renderable.length) {
+      index = renderable[0];
+    } else if (typeof renderable === 'number') {
+      index = renderable;
+    }
+
+    this.tile.index = index;
+    this.tile.visible = true;
 
     return this;
   }

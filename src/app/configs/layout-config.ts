@@ -11,6 +11,9 @@ export const layoutConfig = {
     height: maxHeight
   },
   mainScene: {
+    newGame: {
+      newGamePopup: new Phaser.Geom.Rectangle(0, 0, maxWidth, maxHeight)
+    },
     inWorld: {
       font: new Font(28, 'monospace'),
       leftHud: new Phaser.Geom.Rectangle(0, 0, 100, maxHeight),

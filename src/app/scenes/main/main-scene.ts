@@ -1,6 +1,6 @@
-import { avatarConfig, entityStaticDataIdConfig, layoutConfig, saveConfig } from '../../configs';
+import { layoutConfig, saveConfig } from '../../configs';
 import { MessageHud, NewGamePopup, StatusHud } from '../../dom';
-import { EntityStaticDataManager, renderableComponentKey } from '../../entities';
+import { EntityStaticDataManager } from '../../entities';
 import { LocalStoragePlugin, LocalStorageScene } from '../../plugins/local-storage';
 import { Save } from '../../save';
 import { World, WorldData, WorldDataConfig, WorldExitReason } from '../../world';
@@ -103,21 +103,16 @@ export class MainScene extends Phaser.Scene implements LocalStorageScene {
   }
 
   protected onNewGame(): void {
-    const popup = new NewGamePopup(
-      this,
-      0,
-      0,
-      layoutConfig.scale.width,
-      layoutConfig.scale.height,
-      (avatarStaticDataId, avatarData) => {
-        this.worldDataConfig.avatarStaticDataId = avatarStaticDataId;
-        this.worldDataConfig.avatarData = avatarData;
+    const { x, y, width, height } = layoutConfig.mainScene.newGame.newGamePopup;
 
-        popup.destroy();
+    const popup = new NewGamePopup(this, x, y, width, height, (avatarStaticDataId, avatarData) => {
+      this.worldDataConfig.avatarStaticDataId = avatarStaticDataId;
+      this.worldDataConfig.avatarData = avatarData;
 
-        this.transition(MainSceneState.InWorld);
-      }
-    ).setOrigin(0);
+      popup.destroy();
+
+      this.transition(MainSceneState.InWorld);
+    }).setOrigin(0);
   }
 
   protected onInWorld(prevState: MainSceneState): void {

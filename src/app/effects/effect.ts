@@ -27,7 +27,7 @@ export abstract class Effect<P extends EffectPayload = EffectPayload> {
   public abstract getEntityIds(): string[];
 
   protected isCulled(cells: LevelCell[]): boolean {
-    const bounds = this.level.cullBounds();
-    return !cells.some(({ x, y }) => bounds.contains(x, y));
+    const bounds = this.level.map.cullBounds();
+    return !cells.some(({ x, y }) => bounds.contains(x, y) && this.level.visibility.isVisibleToAvatar(x, y));
   }
 }

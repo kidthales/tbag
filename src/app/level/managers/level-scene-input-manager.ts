@@ -11,7 +11,7 @@ import { validate } from '../../rules';
 import { Level } from '../level';
 import { LevelCell } from '../level-cell';
 
-export class LevelInputManager {
+export class LevelSceneInputManager {
   public allowInput = false;
 
   protected inputMap: Record<InputName, () => void> = {
@@ -56,6 +56,7 @@ export class LevelInputManager {
           }
 
           if (this.inputMap[inputName]) {
+            level.graphics.clearPathTooltip();
             this.allowInput = false;
             this.inputMap[inputName]();
           }
@@ -79,7 +80,7 @@ export class LevelInputManager {
         this.allowInput = false;
 
         const { worldX, worldY } = pointer;
-        const cell = level.getCellAtWorldXY(worldX, worldY);
+        const cell = level.map.getCellAtWorldXY(worldX, worldY);
 
         if (currentMoveCell && currentMoveCell.x === cell.x && currentMoveCell.y === cell.y) {
           this.allowInput = true;
@@ -89,33 +90,26 @@ export class LevelInputManager {
         currentMoveCell = cell;
 
         if (cell.blockMove) {
-          scene.pathTooltip.points = [];
+          level.graphics.clearPathTooltip();
           this.allowInput = true;
           return;
         }
 
         const { x, y } = scene.avatar.getComponent<PositionComponentData>(positionComponentKey);
-        const dx = cell.tile.width / 2;
-        const dy = cell.tile.height / 2;
 
         const begin = new Phaser.Geom.Point(x, y);
         const end = new Phaser.Geom.Point(cell.x, cell.y);
 
         if (cell.creature) {
-          scene.pathTooltip.points = Phaser.Geom.Line.BresenhamPoints(
-            new Phaser.Geom.Line(begin.x, begin.y, end.x, end.y)
-          )
-            .map(({ x, y }) => level.getCell(x, y))
-            .map(({ worldX, worldY }) => new Phaser.Geom.Point(worldX + dx, worldY + dy));
-          scene.pathTooltip.pathStyle(5, 0xff0000);
+          const points = level.map.getBresenhamPath(begin, end).map(({ x, y }) => new Phaser.Geom.Point(x, y));
+          level.graphics.clearPathTooltip().setPathTooltipStyle({ width: 5, color: 0xff0000 }).drawPathTooltip(points);
+
           this.allowInput = true;
           return;
         }
 
-        scene.pathTooltip.points = level
-          .getPath(begin, end)
-          .map(({ worldX, worldY }) => new Phaser.Geom.Point(worldX + dx, worldY + dy));
-        scene.pathTooltip.pathStyle(5, 0x00ff00);
+        const points = level.map.getPath(begin, end).map(({ x, y }) => new Phaser.Geom.Point(x, y));
+        level.graphics.clearPathTooltip().setPathTooltipStyle({ width: 5, color: 0x00ff00 }).drawPathTooltip(points);
 
         this.allowInput = true;
       }
@@ -123,7 +117,7 @@ export class LevelInputManager {
 
     scene.input.on(Phaser.Input.Events.GAMEOBJECT_OUT, (pointer, gameObject) => {
       if (gameObject instanceof GlyphTilemapLayer) {
-        scene.pathTooltip.points = [];
+        level.graphics.clearPathTooltip();
       }
     });
   }
@@ -181,7 +175,7 @@ export class LevelInputManager {
     const { x: srcX, y: srcY } = this.level.levelScene.avatar.getComponent<PositionComponentData>(positionComponentKey);
     const [dstX, dstY] = translate(srcX, srcY, direction);
 
-    const dstCell = this.level.getCell(dstX, dstY);
+    const dstCell = this.level.map.getCell(dstX, dstY);
 
     if (dstCell.creature) {
       // TODO: Resolve default action based on dstCell contents...

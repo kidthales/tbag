@@ -16,7 +16,8 @@ export class MoveEffect extends Effect<MoveEffectPayload> {
     const scene = this.level.levelScene;
     const actor = trigger.payload?.actor;
 
-    const gameobject = (actor.gameobject as unknown) as Phaser.GameObjects.Components.Transform;
+    const gameobject = (actor.gameobject as unknown) as Phaser.GameObjects.Components.Transform &
+      Phaser.GameObjects.Components.Depth;
 
     const dx = dstCell.worldX - srcCell.worldX;
     const dy = dstCell.worldY - srcCell.worldY;
@@ -38,6 +39,8 @@ export class MoveEffect extends Effect<MoveEffectPayload> {
     const duration = 250;
     let halfwayThreshold = false;
 
+    ++gameobject.depth;
+
     scene.tweens.add({
       targets: gameobject,
       props: {
@@ -47,12 +50,18 @@ export class MoveEffect extends Effect<MoveEffectPayload> {
       onUpdate: (tween: Phaser.Tweens.Tween, target: any, ...param: any[]) => {
         if (!halfwayThreshold && tween.progress >= 0.5) {
           halfwayThreshold = true;
+
+          if (actor.id === 'avatar') {
+            this.level.visibility.updateAvatarVisibility(actor as any);
+          }
+
           Effect.refresh([srcCell, dstCell]);
         }
       },
       onUpdateScope: this,
       onComplete: (tween: Phaser.Tweens.Tween, targets: any[], ...param: any[]) => {
         gameobject.setPosition(finalX, finalY);
+        --gameobject.depth;
         callback.call(context || scene);
       },
       onCompleteScope: this

@@ -10,4 +10,5 @@ export interface LevelSaveEntryValue extends JSONObject {
   persist: boolean;
   entityManagerState: EntityManagerState;
   schedulerState: SchedulerState;
+  avatarExplored: true | Record<string, boolean>;
 }

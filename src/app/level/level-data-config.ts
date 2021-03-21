@@ -14,5 +14,6 @@ export interface LevelDataConfig {
   entityManagerState?: EntityManagerState;
   schedulerState?: SchedulerState;
   mapData?: MapDataUnion;
+  avatarExplored?: true | Record<string, boolean>;
   levelScene?: LevelScene;
 }

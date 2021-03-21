@@ -5,7 +5,8 @@ export const worldConfig = {
   levels: {
     town: {
       type: LevelType.Town,
-      persist: true
+      persist: true,
+      avatarExplored: true
     }
   }
 };

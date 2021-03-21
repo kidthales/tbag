@@ -1,7 +1,6 @@
 import { AvatarEntity } from '../avatar';
 import { EffectUnion, scheduleEffects, ScheduledEffects } from '../effects';
 import { PositionComponentData, positionComponentKey } from '../entities';
-import { PathTooltip } from '../graphics';
 import { generateMapData } from '../map';
 import {
   GlyphPlugin,
@@ -17,7 +16,7 @@ import { World } from '../world';
 import { Level } from './level';
 import { LevelData } from './level-data';
 import { LevelSceneLaunchData } from './level-scene-launch-data';
-import { LevelInputManager } from './managers';
+import { LevelSceneInputManager } from './managers';
 import { populateLevelData } from './populate-level-data';
 
 export class LevelScene extends Phaser.Scene implements GlyphScene {
@@ -37,8 +36,6 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
 
   public rng: Phaser.Math.RandomDataGenerator;
 
-  public pathTooltip: PathTooltip;
-
   protected level: Level;
 
   protected simulation: Simulation;
@@ -47,7 +44,7 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
 
   protected playingEffects = false;
 
-  protected levelInputManager: LevelInputManager;
+  protected levelSceneInputManager: LevelSceneInputManager;
 
   public constructor(public readonly id: string, public readonly world: World) {
     super(id);
@@ -58,14 +55,12 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
 
     const levelData = this.initLevelDataAndRng(populate && !fromSave);
 
-    this.initLevelAndSimulation(levelData, fromSave)
-      .initAvatar(avatar, fromSave)
-      .initCameras(levelViewport)
-      .initGraphics();
+    this.initLevelAndSimulation(levelData, fromSave).initAvatar(avatar, fromSave).initCameras(levelViewport);
   }
 
   public create(launchData: LevelSceneLaunchData): void {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.onShutdown, this);
+    this.level.visibility.updateAvatarVisibility(this.avatar);
     this.levelCamera.fadeIn().startFollow(this.avatar.gameobject);
   }
 
@@ -112,7 +107,9 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
       this.simulation.sync();
     }
 
-    this.levelInputManager = new LevelInputManager(level, rng, (effects: EffectUnion[]) => this.endAvatarTurn(effects));
+    this.levelSceneInputManager = new LevelSceneInputManager(level, rng, (effects: EffectUnion[]) =>
+      this.endAvatarTurn(effects)
+    );
 
     return this;
   }
@@ -128,10 +125,10 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
 
     const level = this.level;
 
-    level.allocateGameObject(avatar);
+    level.entity.allocateGameObject(avatar);
 
     const { x, y } = avatar.getComponent<PositionComponentData>(positionComponentKey);
-    const cell = level.getCell(x, y);
+    const cell = level.map.getCell(x, y);
 
     cell.addEntity(avatar);
     cell.refresh();
@@ -144,15 +141,9 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
 
     this.levelCamera = this.cameras.add(x, y, width, height, false, 'level');
 
-    this.level.ignoreCamera(this.cameras.main);
-    this.level.setCameraBounds(this.levelCamera);
+    this.cameras.main.ignore(this.level.gameObjectGroup);
+    this.level.map.setCameraBounds(this.levelCamera);
 
-    return this;
-  }
-
-  protected initGraphics(): this {
-    this.pathTooltip = new PathTooltip(this, { width: 5, color: 0x0000ff });
-    this.cameras.main.ignore(this.pathTooltip);
     return this;
   }
 
@@ -201,7 +192,7 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
   protected beginAvatarTurn(effects: EffectUnion[]): void {
     this.avatarTurn = true;
     this.save();
-    this.displayEffects(effects, () => (this.levelInputManager.allowInput = true), this);
+    this.displayEffects(effects, () => (this.levelSceneInputManager.allowInput = true), this);
   }
 
   protected endAvatarTurn(effects: EffectUnion[]): void {
