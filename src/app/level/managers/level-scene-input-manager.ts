@@ -89,7 +89,7 @@ export class LevelSceneInputManager {
 
         currentMoveCell = cell;
 
-        if (cell.blockMove) {
+        if (!cell.exploredByAvatar || !cell.visibleToAvatar || cell.blockMove) {
           level.graphics.clearPathTooltip();
           this.allowInput = true;
           return;
@@ -108,7 +108,11 @@ export class LevelSceneInputManager {
           return;
         }
 
-        const points = level.map.getPath(begin, end).map(({ x, y }) => new Phaser.Geom.Point(x, y));
+        const points = level.map
+          .getPath(begin, end, (cell) =>
+            level.map.getNeighbors(cell).filter((cell) => cell.exploredByAvatar && cell.visibleToAvatar)
+          )
+          .map(({ x, y }) => new Phaser.Geom.Point(x, y));
         level.graphics.clearPathTooltip().setPathTooltipStyle({ width: 5, color: 0x00ff00 }).drawPathTooltip(points);
 
         this.allowInput = true;

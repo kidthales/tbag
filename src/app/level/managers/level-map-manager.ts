@@ -213,10 +213,26 @@ export class LevelMapManager {
     return this;
   }
 
+  public getNeighbors(cell: LevelCell): LevelCell[] {
+    return LevelMapManager.defaultNeighborDirections
+      .map((direction) => {
+        const [x, y] = translate(cell.x, cell.y, direction);
+
+        if (this.isInBounds(x, y)) {
+          const neighbor = this.getCell(x, y);
+
+          if (!neighbor.blockMove && !neighbor.creature) {
+            return neighbor;
+          }
+        }
+      })
+      .filter(Boolean);
+  }
+
   public getPath(
     begin: Phaser.Geom.Point,
     end: Phaser.Geom.Point,
-    neighbors: (cell: LevelCell) => LevelCell[] = (cell) => this.getPathDefaultNeighbors(cell)
+    neighbors: (cell: LevelCell) => LevelCell[] = (cell) => this.getNeighbors(cell)
   ): LevelCell[] {
     return this.pathFinder
       .find(begin, end, ({ x, y }) => neighbors(this.getCell(x, y)).map(({ x, y }) => ({ x, y })))
@@ -232,21 +248,5 @@ export class LevelMapManager {
   protected getCellFromTile(tile: GlyphTile): LevelCell {
     const { x, y } = tile;
     return new LevelCell(this.level, x, y, this.level.mapData.getCell(x, y), tile);
-  }
-
-  protected getPathDefaultNeighbors(cell: LevelCell): LevelCell[] {
-    return LevelMapManager.defaultNeighborDirections
-      .map((direction) => {
-        const [x, y] = translate(cell.x, cell.y, direction);
-
-        if (this.isInBounds(x, y)) {
-          const neighbor = this.getCell(x, y);
-
-          if (!neighbor.blockMove && !neighbor.creature) {
-            return neighbor;
-          }
-        }
-      })
-      .filter(Boolean);
   }
 }
