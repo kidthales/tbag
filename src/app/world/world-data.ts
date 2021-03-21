@@ -36,6 +36,11 @@ export class WorldData {
   public readonly worldViewport: Phaser.Geom.Rectangle;
 
   /**
+   * World map viewport location & dimensions.
+   */
+  public readonly worldMapViewport: Phaser.Geom.Rectangle;
+
+  /**
    * Avatar entity.
    */
   public readonly avatar: AvatarEntity;
@@ -65,6 +70,7 @@ export class WorldData {
     glyphs,
     entityStaticDataManager,
     worldViewport,
+    worldMapViewport,
     avatarData,
     avatarStaticDataId,
     currentLevel,
@@ -83,6 +89,7 @@ export class WorldData {
 
     this.entityStaticDataManager = entityStaticDataManager;
     this.worldViewport = worldViewport;
+    this.worldMapViewport = worldMapViewport;
 
     this.avatar = new AvatarEntity(avatarStaticDataId, avatarData);
 

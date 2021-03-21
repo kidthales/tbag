@@ -1,12 +1,12 @@
 import { MoveAction, MoveActionDirection } from '../../actions';
 import { defaultInputConfig } from '../../configs';
-import { ConfirmGameOverPopup } from '../../dom';
 import { EffectUnion } from '../../effects';
 import { PositionComponentData, positionComponentKey } from '../../entities';
 import { InputName } from '../../input';
 import { Direction, translate } from '../../map';
 import { GlyphTilemapLayer } from '../../plugins/glyph';
 import { validate } from '../../rules';
+import { ConfirmGameOverPopup } from '../../ui';
 
 import { Level } from '../level';
 import { LevelCell } from '../level-cell';
@@ -129,7 +129,7 @@ export class LevelSceneInputManager {
   protected onTriggerGameOver(): void {
     const { centerX, centerY } = this.level.levelScene.levelCamera;
     const popup = new ConfirmGameOverPopup(
-      this.level.levelScene,
+      this.level.world.scene,
       centerX,
       centerY,
       () => {

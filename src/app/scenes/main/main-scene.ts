@@ -1,8 +1,8 @@
 import { layoutConfig, saveConfig } from '../../configs';
-import { MessageHud, NewGamePopup, StatusHud } from '../../dom';
 import { EntityStaticDataManager } from '../../entities';
 import { LocalStoragePlugin, LocalStorageScene } from '../../plugins/local-storage';
 import { Save } from '../../save';
+import { ContextHud, InfoHud, MessageHud, NewGamePopup, StatusHud } from '../../ui';
 import { World, WorldData, WorldDataConfig, WorldExitReason } from '../../world';
 
 import { MainSceneState } from './main-scene-state';
@@ -50,6 +50,7 @@ export class MainScene extends Phaser.Scene implements LocalStorageScene {
 
     this.worldDataConfig = {
       worldViewport: layoutConfig.mainScene.inWorld.worldViewport,
+      worldMapViewport: layoutConfig.mainScene.inWorld.miniMapViewport,
       font: layoutConfig.mainScene.inWorld.font,
       glyphs: { default: jsonCache.get('glyphs') },
       entityStaticDataManager: new EntityStaticDataManager(jsonCache)
@@ -61,10 +62,16 @@ export class MainScene extends Phaser.Scene implements LocalStorageScene {
   protected initHud(): this {
     this.hudGroup = this.add.group();
 
-    const { bottomHud, leftHud } = layoutConfig.mainScene.inWorld;
+    const { contextHud, infoHud, messageHud, statusHud } = layoutConfig.mainScene.inWorld;
 
-    this.hudGroup.add(new MessageHud(this, bottomHud.x, bottomHud.y, bottomHud.width, bottomHud.height).setOrigin(0));
-    this.hudGroup.add(new StatusHud(this, leftHud.x, leftHud.y, leftHud.width, leftHud.height).setOrigin(0));
+    this.hudGroup.add(
+      new ContextHud(this, contextHud.x, contextHud.y, contextHud.width, contextHud.height).setOrigin(0)
+    );
+    this.hudGroup.add(new InfoHud(this, infoHud.x, infoHud.y, infoHud.width, infoHud.height).setOrigin(0));
+    this.hudGroup.add(
+      new MessageHud(this, messageHud.x, messageHud.y, messageHud.width, messageHud.height).setOrigin(0)
+    );
+    this.hudGroup.add(new StatusHud(this, statusHud.x, statusHud.y, statusHud.width, statusHud.height).setOrigin(0));
 
     this.hudGroup.setVisible(false);
 

@@ -33,6 +33,11 @@ export interface WorldDataConfig {
   worldViewport: Phaser.Geom.Rectangle;
 
   /**
+   * World map viewport location & dimensions.
+   */
+  worldMapViewport: Phaser.Geom.Rectangle;
+
+  /**
    * Avatar data.
    */
   avatarData?: AvatarData;

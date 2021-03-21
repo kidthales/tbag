@@ -30,6 +30,11 @@ export class World {
   public readonly worldViewport: Phaser.Geom.Rectangle;
 
   /**
+   * World map viewport location & dimensions.
+   */
+  public readonly worldMapViewport: Phaser.Geom.Rectangle;
+
+  /**
    * Avatar entity.
    */
   public readonly avatar: AvatarEntity;
@@ -66,14 +71,25 @@ export class World {
    * @param worldData World data.
    */
   public constructor(
-    protected readonly scene: LocalStorageScene,
+    public readonly scene: LocalStorageScene,
     protected readonly onWorldExit: (reason: WorldExitReason) => void,
-    { font, glyphsets, entityStaticDataManager, worldViewport, avatar, currentLevel, levels, scheduler }: WorldData
+    {
+      font,
+      glyphsets,
+      entityStaticDataManager,
+      worldViewport,
+      worldMapViewport,
+      avatar,
+      currentLevel,
+      levels,
+      scheduler
+    }: WorldData
   ) {
     this.worldFont = font;
     this.glyphsets = glyphsets;
     this.entityStaticDataManager = entityStaticDataManager;
     this.worldViewport = worldViewport;
+    this.worldMapViewport = worldMapViewport;
     this.avatar = avatar;
     this.currentLevel = currentLevel;
     this.levels = levels;
@@ -101,6 +117,7 @@ export class World {
     this.scene.scene.launch(this.currentLevel, {
       avatar: this.avatar,
       levelViewport: this.worldViewport,
+      levelMinimapViewport: this.worldMapViewport,
       populate: !fromSave,
       fromSave
     });
@@ -123,11 +140,18 @@ export class World {
   }
 
   public transitionToLevel(id: string): void {
-    const { avatar, currentLevel, levels, scheduler, worldViewport: levelViewport } = this;
+    const {
+      avatar,
+      currentLevel,
+      levels,
+      scheduler,
+      worldViewport: levelViewport,
+      worldMapViewport: levelMinimapViewport
+    } = this;
 
     avatar.gameobject = undefined;
 
-    const launchData: LevelSceneLaunchData = { avatar, levelViewport };
+    const launchData: LevelSceneLaunchData = { avatar, levelViewport, levelMinimapViewport };
 
     if (!levels.has(id)) {
       this.generateLevelData(id);

@@ -34,6 +34,8 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
 
   public levelCamera: Phaser.Cameras.Scene2D.Camera;
 
+  public levelMinimapCamera: Phaser.Cameras.Scene2D.Camera;
+
   public rng: Phaser.Math.RandomDataGenerator;
 
   protected level: Level;
@@ -51,11 +53,13 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
   }
 
   public init(launchData: LevelSceneLaunchData): void {
-    const { avatar, levelViewport, populate, fromSave } = launchData;
+    const { avatar, levelViewport, levelMinimapViewport, populate, fromSave } = launchData;
 
     const levelData = this.initLevelDataAndRng(populate && !fromSave);
 
-    this.initLevelAndSimulation(levelData, fromSave).initAvatar(avatar, fromSave).initCameras(levelViewport);
+    this.initLevelAndSimulation(levelData, fromSave)
+      .initAvatar(avatar, fromSave)
+      .initCameras(levelViewport, levelMinimapViewport);
   }
 
   public create(launchData: LevelSceneLaunchData): void {
@@ -136,13 +140,32 @@ export class LevelScene extends Phaser.Scene implements GlyphScene {
     return this;
   }
 
-  protected initCameras(levelViewport: Phaser.Geom.Rectangle): this {
-    const { x, y, width, height } = levelViewport;
+  protected initCameras(levelViewport: Phaser.Geom.Rectangle, levelMinimapViewport: Phaser.Geom.Rectangle): this {
+    let { x, y, width, height } = levelViewport;
 
     this.levelCamera = this.cameras.add(x, y, width, height, false, 'level');
 
     this.cameras.main.ignore(this.level.gameObjectGroup);
     this.level.map.setCameraBounds(this.levelCamera);
+
+    this.levelMinimapCamera = this.cameras.add(
+      levelMinimapViewport.x,
+      levelMinimapViewport.y,
+      levelMinimapViewport.width,
+      levelMinimapViewport.height,
+      false,
+      'minimap'
+    );
+    this.level.map.setCameraBounds(this.levelMinimapCamera);
+    this.levelMinimapCamera.centerToBounds();
+    //this.levelMinimapCamera.centerToSize();
+    this.levelMinimapCamera.zoomX = levelMinimapViewport.width / this.level.widthInPixels;
+    this.levelMinimapCamera.zoomY = levelMinimapViewport.height / this.level.heightInPixels;
+
+    //this.levelMinimapCamera.scrollX = this.level.widthInPixels / 2;
+    //this.levelMinimapCamera.scrollY = this.level.heightInPixels / 2;
+
+    this.levelMinimapCamera.inputEnabled = false;
 
     return this;
   }
